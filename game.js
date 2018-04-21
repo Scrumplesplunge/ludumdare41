@@ -31,8 +31,9 @@ function updatePlayer() {
 }
 
 async function main() {
-  var [levelImage, brick] =
-      await Promise.all(["level.png", "brick.png"].map(loadImage));
+  var [levelImage, brick, star] =
+      await Promise.all(["level.png", "brick.png", "star.png"].map(loadImage));
+  // Load the level layout.
   var width = levelImage.width, height = levelImage.height;
   var imageData = getImageData(levelImage);
   for (var y = 0; y < height; y++) {
@@ -46,6 +47,9 @@ async function main() {
       walls.set(cell, brick);
     }
   }
+  // Place a few objects.
+  objects.push({image: star, width: 0.25, height: 0.25, x: 6, y: 8.5});
+  // Position the player.
   player.x = 6;
   player.y = 8.5;
   while (true) {

@@ -1,3 +1,20 @@
+const edgeX = Math.tan(0.5 * FOV);
+const yMid = Math.round(0.5 * HEIGHT);
+const wallDistances = [];
+
+function angNorm(angle) {
+  var pi = Math.PI, tau = 2 * Math.PI;
+  return ((angle + pi) % tau + tau) % tau - pi;
+}
+
+function columnToScreenAngle(column) {
+  return Math.atan(edgeX * (2 * column / WIDTH - 1));
+}
+
+function screenAngleToColumn(angle) {
+  return (Math.tan(angle) / edgeX + 1) * WIDTH / 2;
+}
+
 function* walkRay(x, y, angle) {
   var directionX = Math.cos(angle);
   var directionY = Math.sin(angle);
@@ -75,9 +92,7 @@ function computeTextureColumn(cell, hit) {
 }
 
 function drawCeilingAndFloor() {
-  var edgeX = Math.tan(0.5 * FOV);
   context.globalAlpha = 1;
-  var yMid = Math.round(0.5 * HEIGHT);
   context.fillStyle = CEILING_COLOR;
   context.fillRect(0, 0, WIDTH, yMid);
   context.fillStyle = FLOOR_COLOR;
@@ -93,19 +108,18 @@ function drawCeilingAndFloor() {
 
 function drawWalls(x, y, angle) {
   // With focal distance 1, edgeX is how far left on the focal plane we can see.
-  var edgeX = Math.tan(0.5 * FOV);
-  var yMid = 0.5 * HEIGHT;
   context.fillStyle = FOG_COLOR;
   for (var i = 0; i < WIDTH; i++) {
-    var screenAngle = Math.atan(edgeX * (2 * i / WIDTH - 1));
+    var screenAngle = columnToScreenAngle(i);
     var {distance, material, cell, hit} = cast(x, y, angle + screenAngle);
+    wallDistances[i] = distance;
     // Adjust the distance to correct distortion due to the screen being flat.
     var adjustedDistance = distance * Math.cos(screenAngle);
     // The height of the walls is determined in terms of the screen width rather
     // than the screen height to allow different aspect ratios without the scene
     // squashing. This way, the height is also tied to the field of view, so
     // things stay consistent.
-    var height = Math.round(WALL_HEIGHT * WIDTH / adjustedDistance);
+    var height = Math.round(WALL_HEIGHT * WIDTH / edgeX / adjustedDistance);
     var columnStart = Math.round(yMid - 0.5 * height);
     context.globalAlpha = 1;
     if (hit) {
@@ -123,7 +137,60 @@ function drawWalls(x, y, angle) {
   }
 }
 
+var spriteCanvas = document.createElement("canvas");
+var spriteContext = spriteCanvas.getContext("2d");
+function drawObjects(x, y, angle) {
+  // Filter down to sprites which are in front of the player and sort them from
+  // furthest to nearest.
+  var c = Math.cos(angle), s = Math.sin(angle);
+  function distance(sprite) {
+    var dx = sprite.x - x, dy = sprite.y - y;
+    return c * dx + s * dy;
+  }
+  function inViewingRange(s) {
+    var d = distance(s);
+    return PLAYER_RADIUS < d && d < FOG_DISTANCE;
+  }
+  context.globalAlpha = 1;
+  var sprites = objects.filter(inViewingRange);
+  sprites.sort((a, b) => distance(b) - distance(a));
+  for (var sprite of sprites) {
+    // Compute the on-screen dimensions of the sprite.
+    var dx = sprite.x - x, dy = sprite.y - y;
+    var distance = Math.sqrt(dx * dx + dy * dy);
+    var screenAngle = angNorm(Math.atan2(dy, dx) - angle);
+    var adjustedDistance = distance * Math.cos(screenAngle);
+    var column = screenAngleToColumn(screenAngle);
+    var width = Math.round(sprite.width * WIDTH / edgeX / adjustedDistance);
+    var height = Math.round(sprite.height * WIDTH / edgeX / adjustedDistance);
+    var xMin = Math.round(column - 0.5 * width);
+    var yMin = Math.round(yMid - 0.5 * height);
+    // Render the sprite to the offscreen canvas.
+    if (spriteCanvas.width < width) spriteCanvas.width = width;
+    if (spriteCanvas.height < height) spriteCanvas.height = height;
+    spriteContext.imageSmoothingEnabled = false;
+    // Draw the sprite and overlay shading for the fog.
+    spriteContext.globalAlpha = 1;
+    spriteContext.globalCompositeOperation = "source-over";
+    spriteContext.clearRect(0, 0, width, height);
+    spriteContext.drawImage(sprite.image, 0, 0, width, height);
+    spriteContext.fillStyle = FOG_COLOR;
+    spriteContext.globalAlpha = distance / FOG_DISTANCE;
+    spriteContext.globalCompositeOperation = "source-atop";
+    spriteContext.fillRect(0, 0, width, height);
+    // Copy the sprite to the display, using wallDistance[] as a z-buffer.
+    for (var sx = 0; sx < width; sx++) {
+      if (wallDistances[xMin + sx] < distance) continue;
+      context.drawImage(
+          spriteCanvas,
+          sx, 0, 1, height,  // Sprite bounds.
+          xMin + sx, yMin, 1, height);  // Display bounds.
+    }
+  }
+}
+
 function draw(x, y, angle) {
   drawCeilingAndFloor();
   drawWalls(x, y, angle)
+  drawObjects(x, y, angle);
 }

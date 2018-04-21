@@ -14,8 +14,9 @@ const WIDTH = 192;
 
 const canvas = document.getElementById("display");
 const context = canvas.getContext("2d");
-const walls = new Map;  // Map from "x,y" to block material.
+const objects = [];
 const player = {x: 0, y: 0, angle: 0};
+const walls = new Map;  // Map from "x,y" to block material.
 
 const controlMap = new Map([
   ["TURN_LEFT", "ArrowLeft"],
