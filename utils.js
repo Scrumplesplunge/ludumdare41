@@ -22,3 +22,32 @@ function getImageData(image) {
 function delay(seconds) {
   return new Promise((resolve, reject) => setTimeout(resolve, 1000 * seconds));
 }
+
+function cardColor(card) {
+  switch (card.slice(-1)) {
+    case HEARTS:
+    case DIAMONDS:
+      return "#ff0000";
+    case CLUBS:
+    case SPADES:
+      return "#000000";
+  }
+}
+
+function cardValue(card) {
+  var valueString = card.slice(0, -1);
+  switch (valueString) {
+    case "A": return 1;
+    case "J": return 11;
+    case "Q": return 12;
+    case "K": return 13;
+    default: return parseInt(valueString, 10);
+  }
+}
+
+function hexByte(x) { return x.toString(16).padStart(2, "0"); }
+
+function colorAt(array, index) {
+  var r = array[index], g = array[index + 1], b = array[index + 2];
+  return "#" + [r, g, b].map(hexByte).join("");
+}

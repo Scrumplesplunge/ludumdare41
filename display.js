@@ -83,11 +83,11 @@ function computeTextureColumn(cell, hit) {
   //  | Increasing y
   //  v
   if (dx + dy < 0) {
-    return dx - dy < 0 ? 1 - (hit.y - cell.y)  // Quadrant 1
-                       : hit.x - cell.x;  // Quadrant 2
+    return dx - dy < 0 ? hit.y - cell.y  // Quadrant 1
+                       : 1 - (hit.x - cell.x);  // Quadrant 2
   } else {
-    return dx - dy > 0 ? hit.y - cell.y  // Quadrant 3
-                       : 1 - (hit.x - cell.x);  // Quadrant 4
+    return dx - dy > 0 ? 1 - (hit.y - cell.y)  // Quadrant 3
+                       : hit.x - cell.x;  // Quadrant 4
   }
 }
 
@@ -163,8 +163,11 @@ function drawObjects(x, y, angle) {
     var column = screenAngleToColumn(screenAngle);
     var width = Math.round(sprite.width * WIDTH / edgeX / adjustedDistance);
     var height = Math.round(sprite.height * WIDTH / edgeX / adjustedDistance);
+    var verticalOffset =
+        sprite.verticalOffset === undefined ? 0 : sprite.verticalOffset;
+    var offset = verticalOffset * WIDTH / edgeX / adjustedDistance;
     var xMin = Math.round(column - 0.5 * width);
-    var yMin = Math.round(yMid - 0.5 * height);
+    var yMin = Math.round(yMid - 0.5 * height + offset);
     // Render the sprite to the offscreen canvas.
     if (spriteCanvas.width < width) spriteCanvas.width = width;
     if (spriteCanvas.height < height) spriteCanvas.height = height;
@@ -187,6 +190,46 @@ function drawObjects(x, y, angle) {
           xMin + sx, yMin, 1, height);  // Display bounds.
     }
   }
+}
+
+function getStyledFont(style) {
+  if (fontMap.has(style)) return fontMap.get(style);
+  var canvas = document.createElement("canvas");
+  canvas.width = fontImage.width;
+  canvas.height = fontImage.height;
+  var context = canvas.getContext("2d");
+  context.fillStyle = style;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.globalCompositeOperation = "destination-in";
+  context.drawImage(fontImage, 0, 0);
+  fontMap.set(style, canvas);
+  return canvas;
+}
+
+function rawText(x, y, style, message) {
+  var message = message.toUpperCase();
+  var font = getStyledFont(style);
+  for (var i = 0, n = message.length; i < n; i++) {
+    var c = message.charCodeAt(i);
+    if (c < 32 || 96 <= c) c = "?".charCodeAt(0);
+    var fromX = 6 * ((c - 32) % 16);
+    var fromY = 6 * ((c - 32) >> 4);
+    var toX = x + 6 * i;
+    context.drawImage(font, fromX, fromY, 6, 6, toX, y, 6, 6);
+  }
+  return x + 6 * message.length;
+}
+
+function text(x, y, ...parts) {
+  var font = "#ffffff";
+  for (var part of parts) {
+    if (part instanceof Array) {
+      font = part[0];
+    } else {
+      x = rawText(x, y, font, part.toString());
+    }
+  }
+  return x;
 }
 
 function draw(x, y, angle) {

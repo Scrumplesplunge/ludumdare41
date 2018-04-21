@@ -30,33 +30,62 @@ function updatePlayer() {
   }
 }
 
+const startTime = Date.now();
 async function main() {
-  var [levelImage, brick, star] =
-      await Promise.all(["level.png", "brick.png", "star.png"].map(loadImage));
+  var [
+    brick,
+    clubs,
+    diamonds,
+    endBrick,
+    font,
+    hearts,
+    levelImage,
+    spades,
+    star,
+  ] = await Promise.all([
+    "brick.png",
+    "clubs.png",
+    "diamonds.png",
+    "end_brick.png",
+    "font.png",
+    "hearts.png",
+    "level.png",
+    "spades.png",
+    "star.png",
+  ].map(loadImage));
+  fontImage = font;
   // Load the level layout.
   var width = levelImage.width, height = levelImage.height;
   var imageData = getImageData(levelImage);
   for (var y = 0; y < height; y++) {
     for (var x = 0; x < width; x++) {
-      var i = 4 * (width * y + x);
-      var r = imageData.data[i + 0],
-          g = imageData.data[i + 1],
-          b = imageData.data[i + 2];
-      if (r == 255 && g == 255 && b == 255) continue;  // Floor
+      var color = colorAt(imageData.data, 4 * (width * y + x));
       var cell = x + "," + y;
-      walls.set(cell, brick);
+      switch (color) {
+        case "#ff0000": walls.set(cell, diamonds); break;
+        case "#00ff00": walls.set(cell, clubs); break;
+        case "#0000ff": walls.set(cell, hearts); break;
+        case "#ff8800": walls.set(cell, spades); break;
+        case "#888888": walls.set(cell, endBrick); break;
+        case "#000000": walls.set(cell, brick); break;
+        case "#0088ff": player.x = x; player.y = y; break;
+      }
     }
   }
-  // Place a few objects.
-  objects.push({image: star, width: 0.25, height: 0.25, x: 6, y: 8.5});
-  // Position the player.
-  player.x = 6;
-  player.y = 8.5;
   while (true) {
+    star.verticalOffset = 0.01 * Math.sin((0.01 * Date.now()) % (2 * Math.PI));
     updatePlayer();
     context.clearRect(0, 0, WIDTH, HEIGHT);
-    var angle = (Date.now() / 10000) % (2 * Math.PI);
     draw(player.x, player.y, player.angle);
+    var timeTaken = (Date.now() - startTime) / 1000;
+    var minutes = (timeTaken / 60 | 0), seconds = timeTaken % 60 | 0;
+    text(2, 2, "Time: ", ["#ffff00"], minutes, ":",
+         seconds.toString().padStart(2, "0"));
+    // Format the player's card list.
+    var [first, ...rest] = player.cards.map(card => [[cardColor(card)], card]);
+    text(2, HEIGHT - 8,
+         ["#ffffff"], "[", ...first, ["#ffffff"], "]",
+         ...[].concat(...rest));
     await delay(DELTA_TIME);
   }
 }

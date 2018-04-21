@@ -12,11 +12,35 @@ const TURN_SPEED = 5;
 const WALL_HEIGHT = 0.5;
 const WIDTH = 192;
 
+const CLUBS = "%";
+const DIAMONDS = "$";
+const HEARTS = "#";
+const SPADES = "&";
+
 const canvas = document.getElementById("display");
 const context = canvas.getContext("2d");
 const objects = [];
-const player = {x: 0, y: 0, angle: 0};
+const player = {
+  x: 0, y: 0, angle: 0,
+  cards: [
+    "K#",
+    "Q&",
+    "J#",
+    "10&",
+    "9#",
+    "8&",
+    "7#",
+    "6&",
+    "5#",
+    "4&",
+    "3#",
+    "2&",
+    "A#",
+  ],
+};
 const walls = new Map;  // Map from "x,y" to block material.
+let fontImage;
+const fontMap = new Map;  // Map from colour to font image.
 
 const controlMap = new Map([
   ["TURN_LEFT", "ArrowLeft"],
