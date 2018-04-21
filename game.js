@@ -111,9 +111,7 @@ async function main() {
   }
   while (true) {
     music.volume = inputs.get("TOGGLE:MUSIC") ? 0.2 : 0;
-    star.verticalOffset = 0.01 * Math.sin((0.01 * Date.now()) % (2 * Math.PI));
     updatePlayer();
-    context.clearRect(0, 0, WIDTH, HEIGHT);
     drawWorld(player.x, player.y, player.angle);
     inputs.get("HELP") ? drawHelp() : drawHud();
     await delay(DELTA_TIME);
