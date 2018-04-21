@@ -82,10 +82,16 @@ async function main() {
     text(2, 2, "Time: ", ["#ffff00"], minutes, ":",
          seconds.toString().padStart(2, "0"));
     // Format the player's card list.
-    var [first, ...rest] = player.cards.map(card => [[cardColor(card)], card]);
-    text(2, HEIGHT - 8,
-         ["#ffffff"], "[", ...first, ["#ffffff"], "]",
-         ...[].concat(...rest));
+    var cardList = [];
+    if (player.cards.length == 0) {
+      cardList = [["#ffffff"], "[", ["#888888"], "?", ["#ffffff"], "]"];
+    } else {
+      var [first, ...rest] =
+          player.cards.map(card => [[cardColor(card)], card]);
+      cardList =
+          [["#ffffff"], "[", ...first, ["#ffffff"], "]", ...[].concat(...rest)];
+    }
+    text(2, HEIGHT - 8, ...cardList);
     await delay(DELTA_TIME);
   }
 }
