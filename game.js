@@ -3,6 +3,7 @@ const HEIGHT = 120;
 const SCALE = 5;
 const FOG_DISTANCE = 10;
 const FOV = 90 * Math.PI / 180;
+const FOG_COLOR = "#000000";
 
 const canvas = document.getElementById("display");
 canvas.width = WIDTH;
@@ -98,32 +99,62 @@ function* walkRay(x, y, angle) {
       x = nextXEdge;
       y += distanceUntilXEdge * directionY;
       cellX = nextXCell;
-      yield {distance, cell: {x: cellX, y: cellY}};
+      yield {distance, cell: {x: cellX, y: cellY}, hit: {x, y}};
     } else {
       distance += distanceUntilYEdge;
       y = nextYEdge;
       x += distanceUntilYEdge * directionX;
       cellY = nextYCell;
-      yield {distance, cell: {x: cellX, y: cellY}};
+      yield {distance, cell: {x: cellX, y: cellY}, hit: {x, y}};
     }
   }
 }
 
 function cast(walls, x, y, angle) {
-  for (var {distance, cell} of walkRay(x, y, angle)) {
+  for (var {distance, cell, hit} of walkRay(x, y, angle)) {
     var id = cell.x + "," + cell.y;
-    if (walls.has(id)) return {distance, cell}
+    if (walls.has(id)) return {distance, material: walls.get(id), cell, hit};
   }
-  return {distance: FOG_DISTANCE, cell: null};
+  return {distance: FOG_DISTANCE};
+}
+
+function computeTextureColumn(cell, hit) {
+  var centerX = cell.x + 0.5;
+  var centerY = cell.y + 0.5;
+  var dx = hit.x - centerX;
+  var dy = hit.y - centerY;
+  // First we establish which quadrant (see diagram) the hitpoint is in. This
+  // tells us which side of the square we are working with, which allows us to
+  // use one of the coordinates to compute the texture column.
+  //
+  //  +-----+  --> Increasing x
+  //  |\ 4 /|
+  //  | \ / |
+  //  |3 X 1|
+  //  | / \ |
+  //  |/ 2 \|
+  //  +-----+
+  //
+  //  | Increasing y
+  //  v
+  if (dx + dy < 0) {
+    return dx - dy < 0 ? 1 - (hit.y - cell.y)  // Quadrant 1
+                       : hit.x - cell.x;  // Quadrant 2
+  } else {
+    return dx - dy > 0 ? hit.y - cell.y  // Quadrant 3
+                       : 1 - (hit.x - cell.x);  // Quadrant 4
+  }
 }
 
 function render(context, walls, x, y, angle) {
   // With focal distance 1, edgeX is how far left on the focal plane we can see.
   var edgeX = Math.tan(0.5 * FOV);
   var yMid = 0.5 * HEIGHT;
+  context.fillStyle = FOG_COLOR;
   for (var i = 0; i < WIDTH; i++) {
     var screenAngle = Math.atan(edgeX * (2 * i / WIDTH - 1));
-    var {distance} = cast(walls, x, y, angle + screenAngle);
+    var {distance, material, cell, hit} =
+        cast(walls, x, y, angle + screenAngle);
     // Adjust the distance to correct distortion due to the screen being flat.
     var adjustedDistance = distance * Math.cos(screenAngle);
     // The height of the walls is determined in terms of the screen width rather
@@ -131,18 +162,27 @@ function render(context, walls, x, y, angle) {
     // squashing. This way, the height is also tied to the field of view, so
     // things stay consistent.
     var height = Math.round(0.5 * WIDTH / adjustedDistance);
-    // For now, derive a colour from the distance.
-    var c = Math.round(255 * distance / FOG_DISTANCE);
-    context.fillStyle = "rgb(" + c + "," + c + "," + c + ")";
-    context.fillRect(i, Math.round(yMid - 0.5 * height), 1, height);
+    var columnStart = Math.round(yMid - 0.5 * height);
+    context.globalAlpha = 1;
+    if (hit) {
+      var textureColumn =
+          Math.floor(material.width * computeTextureColumn(cell, hit));
+      context.drawImage(
+          material,
+          textureColumn, 0, 1, material.height,  // Texture bounds
+          i, columnStart, 1, height);  // Screen bounds
+      context.globalAlpha = distance / FOG_DISTANCE;
+    }
+    context.fillRect(i, columnStart, 1, height);  // Draw fog.
   }
 }
 
 async function main() {
-  var levelImage = await loadImage("level.png");
+  var [levelImage, brick] =
+      await Promise.all(["level.png", "brick.png"].map(loadImage));
   var width = levelImage.width, height = levelImage.height;
   var imageData = getImageData(levelImage);
-  var walls = new Set;
+  var walls = new Map;  // Map from cell location to block texture.
   for (var y = 0; y < height; y++) {
     for (var x = 0; x < width; x++) {
       var i = 4 * (width * y + x);
@@ -151,7 +191,7 @@ async function main() {
           b = imageData.data[i + 2];
       if (r == 255 && g == 255 && b == 255) continue;  // Floor
       var cell = x + "," + y;
-      walls.add(cell);
+      walls.set(cell, brick);
     }
   }
   var scale = 20;
