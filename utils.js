@@ -8,6 +8,16 @@ function loadImage(name) {
   });
 }
 
+// Asynchronously load a sound file.
+function loadSound(name) {
+  return new Promise((resolve, reject) => {
+    var sound = new Audio;
+    sound.addEventListener("canplaythrough", () => resolve(sound));
+    sound.onerror = reject;
+    sound.src = name;
+  });
+}
+
 // Extract image data from an image.
 function getImageData(image) {
   // We need the image to be on a canvas to extract the image data.

@@ -42,17 +42,22 @@ async function main() {
     levelImage,
     spades,
     star,
+    music,
   ] = await Promise.all([
-    "brick.png",
-    "clubs.png",
-    "diamonds.png",
-    "end_brick.png",
-    "font.png",
-    "hearts.png",
-    "level.png",
-    "spades.png",
-    "star.png",
-  ].map(loadImage));
+    loadImage("brick.png"),
+    loadImage("clubs.png"),
+    loadImage("diamonds.png"),
+    loadImage("end_brick.png"),
+    loadImage("font.png"),
+    loadImage("hearts.png"),
+    loadImage("level.png"),
+    loadImage("spades.png"),
+    loadImage("star.png"),
+    loadSound("music.ogg"),
+  ]);
+  music.loop = true;
+  music.play();
+  inputs.set("TOGGLE:MUSIC", 1);
   fontImage = font;
   // Load the level layout.
   var width = levelImage.width, height = levelImage.height;
@@ -73,25 +78,44 @@ async function main() {
     }
   }
   while (true) {
+    var musicEnabled = inputs.get("TOGGLE:MUSIC");
+    music.volume = musicEnabled ? 0.2 : 0;
     star.verticalOffset = 0.01 * Math.sin((0.01 * Date.now()) % (2 * Math.PI));
     updatePlayer();
     context.clearRect(0, 0, WIDTH, HEIGHT);
     draw(player.x, player.y, player.angle);
-    var timeTaken = (Date.now() - startTime) / 1000;
-    var minutes = (timeTaken / 60 | 0), seconds = timeTaken % 60 | 0;
-    text(2, 2, "Time: ", ["#ffff00"], minutes, ":",
-         seconds.toString().padStart(2, "0"));
-    // Format the player's card list.
-    var cardList = [];
-    if (player.cards.length == 0) {
-      cardList = [["#ffffff"], "[", ["#888888"], "?", ["#ffffff"], "]"];
+    if (inputs.get("HELP")) {
+      // Display the help text.
+      var i = 0;
+      for (var [input, key] of controlMap) {
+        text(2, 2 + 8 * i, input + " = ", ["#ffff00"], key);
+        i++;
+      }
     } else {
-      var [first, ...rest] =
-          player.cards.map(card => [[cardColor(card)], card]);
-      cardList =
-          [["#ffffff"], "[", ...first, ["#ffffff"], "]", ...[].concat(...rest)];
+      // Display elapsed time.
+      var timeTaken = (Date.now() - startTime) / 1000;
+      var minutes = (timeTaken / 60 | 0), seconds = timeTaken % 60 | 0;
+      text(2, 2, "Time: ", ["#ffff00"], minutes, ":",
+           seconds.toString().padStart(2, "0"));
+      // Display the music indicator.
+      var musicMessage = [
+        "Help (H) Music ",
+        [musicEnabled ? "#00ff00" : "#ff0000"],
+        musicEnabled ? "On" : "Off",
+      ];
+      text(WIDTH - 1 - measureText(...musicMessage), 2, ...musicMessage);
+      // Format the player's card list.
+      var cardList = [];
+      if (player.cards.length == 0) {
+        cardList = [["#ffffff"], "[", ["#888888"], "?", ["#ffffff"], "]"];
+      } else {
+        var [first, ...rest] =
+            player.cards.map(card => [[cardColor(card)], card]);
+        cardList =
+            [["#ffffff"], "[", ...first, ["#ffffff"], "]", ...[].concat(...rest)];
+      }
+      text(2, HEIGHT - 8, ...cardList);
     }
-    text(2, HEIGHT - 8, ...cardList);
     await delay(DELTA_TIME);
   }
 }

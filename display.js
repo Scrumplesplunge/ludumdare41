@@ -206,6 +206,8 @@ function getStyledFont(style) {
   return canvas;
 }
 
+function rawMeasureText(message) { return 6 * message.length; }
+
 function rawText(x, y, style, message) {
   var message = message.toUpperCase();
   var font = getStyledFont(style);
@@ -217,7 +219,16 @@ function rawText(x, y, style, message) {
     var toX = x + 6 * i;
     context.drawImage(font, fromX, fromY, 6, 6, toX, y, 6, 6);
   }
-  return x + 6 * message.length;
+  return x + rawMeasureText(message);
+}
+
+function measureText(...parts) {
+  var length = 0;
+  for (var part of parts) {
+    if (part instanceof Array) continue;
+    length += rawMeasureText(part);
+  }
+  return length;
 }
 
 function text(x, y, ...parts) {

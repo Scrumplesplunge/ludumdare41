@@ -26,7 +26,12 @@ window.addEventListener("resize", resize);
 function handleKeyCode(code, state) {
   if (!keyMap.has(event.code)) return;
   var input = keyMap.get(event.code);
-  inputs.set(input, state);
+  if (input.substr(0, 7) == "TOGGLE:") {
+    // Toggle the value on keydown.
+    if (state == 1) inputs.set(input, 1 - inputs.get(input));
+  } else {
+    inputs.set(input, state);
+  }
 }
 window.addEventListener("keydown", event => handleKeyCode(event.code, 1));
 window.addEventListener("keyup", event => handleKeyCode(event.code, 0));

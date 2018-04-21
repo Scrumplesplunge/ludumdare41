@@ -41,6 +41,7 @@ const player = {
 const walls = new Map;  // Map from "x,y" to block material.
 let fontImage;
 const fontMap = new Map;  // Map from colour to font image.
+let music;  // Music audio handle.
 
 const controlMap = new Map([
   ["TURN_LEFT", "ArrowLeft"],
@@ -51,6 +52,8 @@ const controlMap = new Map([
   ["STRAFE_RIGHT", "KeyD"],
   ["INTERACT", "KeyE"],
   ["FIRE", "Space"],
+  ["TOGGLE:MUSIC", "KeyM"],
+  ["HELP", "KeyH"],
 ]);
 const keyMap = new Map([...controlMap].map(([i, k]) => [k, i]));
 const inputs = new Map([...controlMap].map(([i, k]) => [i, 0]));
