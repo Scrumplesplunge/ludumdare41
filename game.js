@@ -1,9 +1,12 @@
-const WIDTH = 160;
-const HEIGHT = 120;
+const WIDTH = 192;
+const HEIGHT = 108;
 const SCALE = 5;
-const FOG_DISTANCE = 10;
+const FOG_DISTANCE = 5;
 const FOV = 90 * Math.PI / 180;
 const FOG_COLOR = "#000000";
+const CEILING_COLOR = "#7e756e";
+const FLOOR_COLOR = "#3a3633";
+const WALL_HEIGHT = 0.5;
 
 const canvas = document.getElementById("display");
 canvas.width = WIDTH;
@@ -146,7 +149,24 @@ function computeTextureColumn(cell, hit) {
   }
 }
 
-function render(context, walls, x, y, angle) {
+function drawCeilingAndFloor() {
+  var edgeX = Math.tan(0.5 * FOV);
+  context.globalAlpha = 1;
+  var yMid = Math.round(0.5 * HEIGHT);
+  context.fillStyle = CEILING_COLOR;
+  context.fillRect(0, 0, WIDTH, yMid);
+  context.fillStyle = FLOOR_COLOR;
+  context.fillRect(0, yMid, WIDTH, HEIGHT - yMid);
+  context.fillStyle = FOG_COLOR;
+  for (var y = 0; y < yMid; y++) {
+    var lerp = 1 - y / yMid;
+    context.globalAlpha = 1 / (0.8 + lerp);
+    context.fillRect(0, y, WIDTH, 1);
+    context.fillRect(0, HEIGHT - y - 1, WIDTH, 1);
+  }
+}
+
+function drawWalls(walls, x, y, angle) {
   // With focal distance 1, edgeX is how far left on the focal plane we can see.
   var edgeX = Math.tan(0.5 * FOV);
   var yMid = 0.5 * HEIGHT;
@@ -161,7 +181,7 @@ function render(context, walls, x, y, angle) {
     // than the screen height to allow different aspect ratios without the scene
     // squashing. This way, the height is also tied to the field of view, so
     // things stay consistent.
-    var height = Math.round(0.5 * WIDTH / adjustedDistance);
+    var height = Math.round(WALL_HEIGHT * WIDTH / adjustedDistance);
     var columnStart = Math.round(yMid - 0.5 * height);
     context.globalAlpha = 1;
     if (hit) {
@@ -175,6 +195,11 @@ function render(context, walls, x, y, angle) {
     }
     context.fillRect(i, columnStart, 1, height);  // Draw fog.
   }
+}
+
+function draw(walls, x, y, angle) {
+  drawCeilingAndFloor();
+  drawWalls(walls, x, y, angle)
 }
 
 async function main() {
@@ -198,7 +223,7 @@ async function main() {
   while (true) {
     context.clearRect(0, 0, WIDTH, HEIGHT);
     var angle = (Date.now() / 10000) % (2 * Math.PI);
-    render(context, walls, 6, 8.5, angle);
+    draw(walls, 6, 8.5, angle);
     await delay(50);
   }
 }
