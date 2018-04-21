@@ -32,7 +32,7 @@ function getImageData(image) {
   return context.getImageData(0, 0, image.width, image.height);
 }
 
-var mouse = {x: 0, y: 0};
+var mouse = {x: 208, y: 272};
 display.addEventListener("mousemove", event => {
   mouse.x = event.offsetX;
   mouse.y = event.offsetY;
@@ -47,16 +47,17 @@ function* walkRay(x, y, angle) {
   var directionY = Math.sin(angle);
   var distance = 0;
   var iterCount = 0;
+  var cellX = directionX >= 0 ? Math.floor(x) : Math.ceil(x - 1);
+  var cellY = directionY >= 0 ? Math.floor(y) : Math.ceil(y - 1);
   while (distance < FOG_DISTANCE) {
     if (++iterCount == 200) throw new Error("balls");
     // next?Edge is the next point along coordinate ? where the ray could hit.
     // The coordinates are independent, this isn't the actual cell yet.
-    var nextXEdge = directionX >= 0 ? Math.floor(x) + 1 : Math.ceil(x - 1);
-    var nextYEdge = directionY >= 0 ? Math.floor(y) + 1 : Math.ceil(y - 1);
+    var nextXEdge = directionX >= 0 ? cellX + 1 : cellX;
+    var nextYEdge = directionY >= 0 ? cellY + 1 : cellY;
     // next?Cell is the cell that would be hit at next?Edge.
-    var nextXCell = directionX >= 0 ? Math.floor(x) + 1 : Math.ceil(x - 1) - 1;
-    var nextYCell = directionY >= 0 ? Math.floor(y) + 1 : Math.ceil(y - 1) - 1;
-    debugger;
+    var nextXCell = directionX >= 0 ? cellX + 1 : cellX - 1;
+    var nextYCell = directionY >= 0 ? cellY + 1 : cellY - 1;
     // Now we want to compute the distance along the line that we have to travel
     // before hitting either the next X or next Y boundary. Normally we would
     // have to deal with the 0 case specially to avoid dividing by it but
@@ -69,12 +70,14 @@ function* walkRay(x, y, angle) {
       distance += distanceUntilXEdge;
       x = nextXEdge;
       y += distanceUntilXEdge * directionY;
-      yield {distance, cell: {x, y: Math.floor(y)}};
+      cellX = nextXCell;
+      yield {distance, cell: {x: cellX, y: cellY}};
     } else {
       distance += distanceUntilYEdge;
       y = nextYEdge;
       x += distanceUntilYEdge * directionX;
-      yield {distance, cell: {x: Math.floor(x), y}};
+      cellY = nextYCell;
+      yield {distance, cell: {x: cellX, y: cellY}};
     }
   }
 }
