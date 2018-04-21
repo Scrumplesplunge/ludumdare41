@@ -6,6 +6,7 @@ const FOG_DISTANCE = 5;
 const FOV = 90 * Math.PI / 180;
 const HEIGHT = 108;
 const MOVE_SPEED = 3;
+const PLAYER_RADIUS = 0.25;
 const SCALE = 5;
 const TURN_SPEED = 5;
 const WALL_HEIGHT = 0.5;

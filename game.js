@@ -4,6 +4,32 @@ canvas.style.width = SCALE * WIDTH + "px";
 canvas.style.height = SCALE * HEIGHT + "px";
 context.imageSmoothingEnabled = false;
 
+function updatePlayer() {
+  // Move the player based on inputs.
+  var forwardMove = inputs.get("FORWARDS") - inputs.get("BACKWARDS");
+  var sideMove = inputs.get("STRAFE_RIGHT") - inputs.get("STRAFE_LEFT");
+  var turn = inputs.get("TURN_RIGHT") - inputs.get("TURN_LEFT");
+  player.angle += TURN_SPEED * turn * DELTA_TIME;
+  var c = Math.cos(player.angle), s = Math.sin(player.angle);
+  var dx = (c * forwardMove - s * sideMove) * MOVE_SPEED * DELTA_TIME;
+  var dy = (s * forwardMove + c * sideMove) * MOVE_SPEED * DELTA_TIME;
+  player.x += dx;
+  player.y += dy;
+  // Correct the player location if they are intersecting with any walls.
+  var cellX = Math.floor(player.x);
+  var cellY = Math.floor(player.y);
+  if (dx < 0 && walls.has((cellX - 1) + "," + cellY)) {
+    player.x = Math.max(player.x, cellX + PLAYER_RADIUS);
+  } else if (dx > 0 && walls.has((cellX + 1) + "," + cellY)) {
+    player.x = Math.min(player.x, cellX + 1 - PLAYER_RADIUS);
+  }
+  if (dy < 0 && walls.has(cellX + "," + (cellY - 1))) {
+    player.y = Math.max(player.y, cellY + PLAYER_RADIUS);
+  } else if (dy > 0 && walls.has(cellX + "," + (cellY + 1))) {
+    player.y = Math.min(player.y, cellY + 1 - PLAYER_RADIUS);
+  }
+}
+
 async function main() {
   var [levelImage, brick] =
       await Promise.all(["level.png", "brick.png"].map(loadImage));
@@ -23,13 +49,7 @@ async function main() {
   player.x = 6;
   player.y = 8.5;
   while (true) {
-    var forwardMove = inputs.get("FORWARDS") - inputs.get("BACKWARDS");
-    var sideMove = inputs.get("STRAFE_RIGHT") - inputs.get("STRAFE_LEFT");
-    var turn = inputs.get("TURN_RIGHT") - inputs.get("TURN_LEFT");
-    player.angle += TURN_SPEED * turn * DELTA_TIME;
-    var c = Math.cos(player.angle), s = Math.sin(player.angle);
-    player.x += (c * forwardMove - s * sideMove) * MOVE_SPEED * DELTA_TIME;
-    player.y += (s * forwardMove + c * sideMove) * MOVE_SPEED * DELTA_TIME;
+    updatePlayer();
     context.clearRect(0, 0, WIDTH, HEIGHT);
     var angle = (Date.now() / 10000) % (2 * Math.PI);
     draw(player.x, player.y, player.angle);
