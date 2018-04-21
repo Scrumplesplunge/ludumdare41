@@ -1,7 +1,8 @@
-const WIDTH = 800;
-const HEIGHT = 600;
-const SCALE = 1;
+const WIDTH = 160;
+const HEIGHT = 120;
+const SCALE = 5;
 const FOG_DISTANCE = 10;
+const FOV = 90 * Math.PI / 180;
 
 const canvas = document.getElementById("display");
 canvas.width = WIDTH;
@@ -85,9 +86,30 @@ function* walkRay(x, y, angle) {
 function cast(walls, x, y, angle) {
   for (var {distance, cell} of walkRay(x, y, angle)) {
     var id = cell.x + "," + cell.y;
-    if (walls.has(id)) return {cell, distance};
+    if (walls.has(id)) return {distance, cell}
   }
-  return {cell: null, distance: FOG_DISTANCE};
+  return {distance: FOG_DISTANCE, cell: null};
+}
+
+function render(context, walls, x, y, angle) {
+  // With focal distance 1, edgeX is how far left on the focal plane we can see.
+  var edgeX = Math.tan(0.5 * FOV);
+  var yMid = 0.5 * HEIGHT;
+  for (var i = 0; i < WIDTH; i++) {
+    var screenAngle = Math.atan(edgeX * (2 * i / WIDTH - 1));
+    var {distance} = cast(walls, x, y, angle + screenAngle);
+    // Adjust the distance to correct distortion due to the screen being flat.
+    var adjustedDistance = distance * Math.cos(screenAngle);
+    // The height of the walls is determined in terms of the screen width rather
+    // than the screen height to allow different aspect ratios without the scene
+    // squashing. This way, the height is also tied to the field of view, so
+    // things stay consistent.
+    var height = Math.round(0.5 * WIDTH / adjustedDistance);
+    // For now, derive a colour from the distance.
+    var c = Math.round(255 * distance / FOG_DISTANCE);
+    context.fillStyle = "rgb(" + c + "," + c + "," + c + ")";
+    context.fillRect(i, Math.round(yMid - 0.5 * height), 1, height);
+  }
 }
 
 async function main() {
@@ -109,22 +131,8 @@ async function main() {
   var scale = 20;
   while (true) {
     context.clearRect(0, 0, WIDTH, HEIGHT);
-    context.drawImage(levelImage, 0, 0, scale * width, scale * height);
-    context.fillStyle = "#ff0000";
-    context.fillRect(mouse.x - 2, mouse.y - 2, 4, 4);
-    var worldX = mouse.x / scale;
-    var worldY = mouse.y / scale;
-    context.strokeStyle = "#ff0000";
-    context.beginPath();
-    for (var i = 0; i < 16; i++) {
-      var angle = 2 * Math.PI * i / 16;
-      var c = Math.cos(angle), s = Math.sin(angle);
-      var {distance} = cast(walls, worldX, worldY, angle);
-      context.moveTo(scale * worldX, scale * worldY);
-      context.lineTo(scale * (worldX + distance * c),
-                     scale * (worldY + distance * s));
-    }
-    context.stroke();
+    var angle = (Date.now() / 10000) % (2 * Math.PI);
+    render(context, walls, 6, 8.5, angle);
     await delay(50);
   }
 }
