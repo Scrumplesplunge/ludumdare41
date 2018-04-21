@@ -1,12 +1,15 @@
-const WIDTH = 192;
-const HEIGHT = 108;
-const SCALE = 5;
+const CEILING_COLOR = "#7e756e";
+const DELTA_TIME = 0.02;
+const FLOOR_COLOR = "#3a3633";
+const FOG_COLOR = "#000000";
 const FOG_DISTANCE = 5;
 const FOV = 90 * Math.PI / 180;
-const FOG_COLOR = "#000000";
-const CEILING_COLOR = "#7e756e";
-const FLOOR_COLOR = "#3a3633";
+const HEIGHT = 108;
+const MOVE_SPEED = 3;
+const SCALE = 5;
+const TURN_SPEED = 5;
 const WALL_HEIGHT = 0.5;
+const WIDTH = 192;
 
 const canvas = document.getElementById("display");
 canvas.width = WIDTH;
@@ -61,8 +64,8 @@ function getImageData(image) {
   return context.getImageData(0, 0, image.width, image.height);
 }
 
-function delay(ms) {
-  return new Promise((resolve, reject) => setTimeout(resolve, ms));
+function delay(seconds) {
+  return new Promise((resolve, reject) => setTimeout(resolve, 1000 * seconds));
 }
 
 function* walkRay(x, y, angle) {
@@ -177,8 +180,10 @@ function drawWalls(walls, x, y, angle) {
     var columnStart = Math.round(yMid - 0.5 * height);
     context.globalAlpha = 1;
     if (hit) {
+      var rawColumn = computeTextureColumn(cell, hit);
+      var scaledColumn = Math.floor(material.width * rawColumn);
       var textureColumn =
-          Math.floor(material.width * computeTextureColumn(cell, hit));
+          Math.max(0, Math.min(material.width - 1, scaledColumn));
       context.drawImage(
           material,
           textureColumn, 0, 1, material.height,  // Texture bounds
@@ -193,6 +198,29 @@ function draw(walls, x, y, angle) {
   drawCeilingAndFloor();
   drawWalls(walls, x, y, angle)
 }
+
+var controlMap = new Map([
+  ["TURN_LEFT", "ArrowLeft"],
+  ["TURN_RIGHT", "ArrowRight"],
+  ["FORWARDS", "KeyW"],
+  ["BACKWARDS", "KeyS"],
+  ["STRAFE_LEFT", "KeyA"],
+  ["STRAFE_RIGHT", "KeyD"],
+  ["INTERACT", "KeyE"],
+  ["FIRE", "Space"],
+]);
+var keyMap = new Map;
+for (var [input, key] of controlMap) keyMap.set(key, input);
+
+var inputs = new Map;
+for (var [input, key] of controlMap) inputs.set(input, 0);
+function handleKeyCode(code, state) {
+  if (!keyMap.has(event.code)) return;
+  var input = keyMap.get(event.code);
+  inputs.set(input, state);
+}
+window.addEventListener("keydown", event => handleKeyCode(event.code, 1));
+window.addEventListener("keyup", event => handleKeyCode(event.code, 0));
 
 async function main() {
   var [levelImage, brick] =
@@ -211,12 +239,19 @@ async function main() {
       walls.set(cell, brick);
     }
   }
-  var scale = 20;
+  var player = {x: 6, y: 8.5, angle: 0};
   while (true) {
+    var forwardMove = inputs.get("FORWARDS") - inputs.get("BACKWARDS");
+    var sideMove = inputs.get("STRAFE_RIGHT") - inputs.get("STRAFE_LEFT");
+    var turn = inputs.get("TURN_RIGHT") - inputs.get("TURN_LEFT");
+    player.angle += TURN_SPEED * turn * DELTA_TIME;
+    var c = Math.cos(player.angle), s = Math.sin(player.angle);
+    player.x += (c * forwardMove - s * sideMove) * MOVE_SPEED * DELTA_TIME;
+    player.y += (s * forwardMove + c * sideMove) * MOVE_SPEED * DELTA_TIME;
     context.clearRect(0, 0, WIDTH, HEIGHT);
     var angle = (Date.now() / 10000) % (2 * Math.PI);
-    draw(walls, 6, 8.5, angle);
-    await delay(50);
+    draw(walls, player.x, player.y, player.angle);
+    await delay(DELTA_TIME);
   }
 }
 
