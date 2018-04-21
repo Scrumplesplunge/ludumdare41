@@ -17,6 +17,7 @@ const DIAMONDS = "$";
 const HEARTS = "#";
 const SPADES = "&";
 
+const startTime = Date.now();
 const canvas = document.getElementById("display");
 const context = canvas.getContext("2d");
 const objects = [];

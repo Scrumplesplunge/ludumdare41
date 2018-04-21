@@ -243,7 +243,7 @@ function text(x, y, ...parts) {
   return x;
 }
 
-function draw(x, y, angle) {
+function drawWorld(x, y, angle) {
   drawCeilingAndFloor();
   drawWalls(x, y, angle)
   drawObjects(x, y, angle);

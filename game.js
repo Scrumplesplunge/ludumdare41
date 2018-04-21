@@ -30,7 +30,39 @@ function updatePlayer() {
   }
 }
 
-const startTime = Date.now();
+function drawHelp() {
+  var i = 0;
+  for (var [input, key] of controlMap) {
+    text(2, 2 + 8 * i, input + " = ", ["#ffff00"], key);
+    i++;
+  }
+}
+
+function drawHud() {
+  // Display elapsed time.
+  var timeTaken = (Date.now() - startTime) / 1000;
+  var minutes = (timeTaken / 60 | 0), seconds = timeTaken % 60 | 0;
+  text(2, 2, "Time: ", ["#ffff00"], minutes, ":",
+       seconds.toString().padStart(2, "0"));
+  // Display the music indicator.
+  var musicMessage = [
+    "Help (H) Music ",
+    [inputs.get("TOGGLE:MUSIC") ? "#00ff00" : "#ff0000"],
+    inputs.get("TOGGLE:MUSIC") ? "On" : "Off",
+  ];
+  text(WIDTH - 1 - measureText(...musicMessage), 2, ...musicMessage);
+  // Format the player's card list.
+  var cardList = [];
+  if (player.cards.length == 0) {
+    cardList = [["#ffffff"], "[", ["#888888"], "?", ["#ffffff"], "]"];
+  } else {
+    var [first, ...rest] = player.cards.map(card => [[cardColor(card)], card]);
+    cardList =
+        [["#ffffff"], "[", ...first, ["#ffffff"], "]", ...[].concat(...rest)];
+  }
+  text(2, HEIGHT - 8, ...cardList);
+}
+
 async function main() {
   var [
     brick,
@@ -78,44 +110,12 @@ async function main() {
     }
   }
   while (true) {
-    var musicEnabled = inputs.get("TOGGLE:MUSIC");
-    music.volume = musicEnabled ? 0.2 : 0;
+    music.volume = inputs.get("TOGGLE:MUSIC") ? 0.2 : 0;
     star.verticalOffset = 0.01 * Math.sin((0.01 * Date.now()) % (2 * Math.PI));
     updatePlayer();
     context.clearRect(0, 0, WIDTH, HEIGHT);
-    draw(player.x, player.y, player.angle);
-    if (inputs.get("HELP")) {
-      // Display the help text.
-      var i = 0;
-      for (var [input, key] of controlMap) {
-        text(2, 2 + 8 * i, input + " = ", ["#ffff00"], key);
-        i++;
-      }
-    } else {
-      // Display elapsed time.
-      var timeTaken = (Date.now() - startTime) / 1000;
-      var minutes = (timeTaken / 60 | 0), seconds = timeTaken % 60 | 0;
-      text(2, 2, "Time: ", ["#ffff00"], minutes, ":",
-           seconds.toString().padStart(2, "0"));
-      // Display the music indicator.
-      var musicMessage = [
-        "Help (H) Music ",
-        [musicEnabled ? "#00ff00" : "#ff0000"],
-        musicEnabled ? "On" : "Off",
-      ];
-      text(WIDTH - 1 - measureText(...musicMessage), 2, ...musicMessage);
-      // Format the player's card list.
-      var cardList = [];
-      if (player.cards.length == 0) {
-        cardList = [["#ffffff"], "[", ["#888888"], "?", ["#ffffff"], "]"];
-      } else {
-        var [first, ...rest] =
-            player.cards.map(card => [[cardColor(card)], card]);
-        cardList =
-            [["#ffffff"], "[", ...first, ["#ffffff"], "]", ...[].concat(...rest)];
-      }
-      text(2, HEIGHT - 8, ...cardList);
-    }
+    drawWorld(player.x, player.y, player.angle);
+    inputs.get("HELP") ? drawHelp() : drawHud();
     await delay(DELTA_TIME);
   }
 }
