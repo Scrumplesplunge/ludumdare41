@@ -10,7 +10,33 @@ canvas.height = HEIGHT;
 canvas.style.width = SCALE * WIDTH + "px";
 canvas.style.height = SCALE * HEIGHT + "px";
 const context = canvas.getContext("2d");
-context.imageSmoothingEnabled = false;
+
+// Automatically resize and position the canvas in the centre of the window.
+function resize() {
+  var aspect = WIDTH / HEIGHT;
+  var heightIfFullWidth = window.innerWidth / aspect;
+  var widthIfFullHeight = window.innerHeight * aspect;
+  if (heightIfFullWidth <= window.innerHeight) {
+    // Canvas is full-width, possibly with unused space above and below.
+    var unusedRows = window.innerHeight - heightIfFullWidth;
+    canvas.style.top = 0.5 * unusedRows + "px";
+    canvas.style.left = "0px";
+    canvas.style.width = window.innerWidth + "px";
+    canvas.style.height = heightIfFullWidth + "px";
+  } else {
+    // Canvas is full-height, possibly with unused space to the left and right.
+    var unusedColumns = window.innerWidth - widthIfFullHeight;
+    canvas.style.top = "0px";
+    canvas.style.left = 0.5 * unusedColumns + "px";
+    canvas.style.width = widthIfFullHeight + "px";
+    canvas.style.height = window.innerHeight + "px";
+  }
+  // After changing the canvas dimensions, the context resets and has to be
+  // reconfigured.
+  context.imageSmoothingEnabled = false;
+}
+resize();
+window.addEventListener("resize", resize);
 
 // Asynchronously load an image file.
 function loadImage(name) {
