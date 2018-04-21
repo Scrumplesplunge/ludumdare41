@@ -39,7 +39,7 @@ const player = {
     "A#",
   ],
 };
-const walls = new Map;  // Map from "x,y" to block material.
+const walls = new Map;  // Map from "x,y" to material.
 let fontImage;
 const fontMap = new Map;  // Map from colour to font image.
 let music;  // Music audio handle.
@@ -58,3 +58,15 @@ const controlMap = new Map([
 ]);
 const keyMap = new Map([...controlMap].map(([i, k]) => [k, i]));
 const inputs = new Map([...controlMap].map(([i, k]) => [i, 0]));
+
+const levelColorMap = new Map([
+  ["#ffffff", "floor:"],
+  ["#ff0000", "wall:diamonds"],
+  ["#00ff00", "wall:clubs"],
+  ["#0000ff", "wall:hearts"],
+  ["#ff8800", "wall:spades"],
+  ["#888888", "wall:end_brick"],
+  ["#000000", "wall:brick"],
+  ["#0088ff", "object:player"],
+  ["#ffff00", "instance:star"],
+]);

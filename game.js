@@ -4,6 +4,94 @@ canvas.style.width = SCALE * WIDTH + "px";
 canvas.style.height = SCALE * HEIGHT + "px";
 context.imageSmoothingEnabled = false;
 
+async function loadFont() {
+  fontImage = await loadImage("font.png");
+}
+
+async function loadMusic() {
+  music = await loadSound("music.ogg");
+  music.loop = true;
+  // Set the music to 0 volume - the game loop will overwrite this soon but
+  // defaulting to 0 rather than 1 saves us from getting a very loud noise for
+  // a brief instant before a better volume is set.
+  music.volume = 0;
+  music.play();
+  inputs.set("TOGGLE:MUSIC", 1);  // Music toggle is default-enabled.
+}
+
+async function loadWallImages() {
+  return new Map(await Promise.all([
+    "brick",
+    "clubs",
+    "diamonds",
+    "end_brick",
+    "hearts",
+    "spades",
+  ].map(async (name) => [name, await loadImage(name + ".png")])));
+}
+
+async function loadLevel(name) {
+  let [levelImage, starImage, wallImages] = await Promise.all([
+    loadImage("level.png"),
+    loadImage("star.png"),
+    loadWallImages(),
+  ]);
+  var width = levelImage.width, height = levelImage.height;
+  var imageData = getImageData(levelImage);
+
+  var objectInitializers = new Map([
+    ["player", (x, y) => { player.x = x; player.y = y; }],
+  ]);
+
+  function makeStar(x, y) {
+    return {
+      image: starImage,
+      width: 0.25,
+      height: 0.25,
+      x, y,
+    };
+  }
+
+  var instancers = new Map([
+    ["star", (x, y) => objects.push(makeStar(x, y))],
+  ]);
+
+  walls.clear();
+  objects.splice(0, objects.length);
+  var objectIds = new Set;
+  for (var y = 0; y < height; y++) {
+    for (var x = 0; x < width; x++) {
+      var color = colorAt(imageData.data, 4 * (width * y + x));
+      var cell = x + "," + y;
+      if (!levelColorMap.has(color))
+        throw new Error("Unregistered color: " + color);
+      let [type, id] = levelColorMap.get(color).split(":");
+      switch (type) {
+        case "floor":
+          break;
+        case "wall":
+          walls.set(cell, wallImages.get(id));
+          break;
+        case "object":
+          if (objectIds.has(id))
+            throw new Error("Duplicate object: " + id);
+          objectIds.add(id);
+          if (!objectInitializers.has(id))
+            throw new Error("Unknown object type: " + id);
+          objectInitializers.get(id)(x, y);
+          break;
+        case "instance":
+          if (!instancers.has(id))
+            throw new Error("Unknown instance type: " + id);
+          instancers.get(id)(x, y);
+          break;
+        default:
+          throw new Error("Unhandled color type: " + type);
+      }
+    }
+  }
+}
+
 function updatePlayer() {
   // Move the player based on inputs.
   var forwardMove = inputs.get("FORWARDS") - inputs.get("BACKWARDS");
@@ -64,51 +152,11 @@ function drawHud() {
 }
 
 async function main() {
-  var [
-    brick,
-    clubs,
-    diamonds,
-    endBrick,
-    font,
-    hearts,
-    levelImage,
-    spades,
-    star,
-    music,
-  ] = await Promise.all([
-    loadImage("brick.png"),
-    loadImage("clubs.png"),
-    loadImage("diamonds.png"),
-    loadImage("end_brick.png"),
-    loadImage("font.png"),
-    loadImage("hearts.png"),
-    loadImage("level.png"),
-    loadImage("spades.png"),
-    loadImage("star.png"),
-    loadSound("music.ogg"),
+  await Promise.all([
+    loadFont(),
+    loadMusic(),
+    loadLevel("level.png"),
   ]);
-  music.loop = true;
-  music.play();
-  inputs.set("TOGGLE:MUSIC", 1);
-  fontImage = font;
-  // Load the level layout.
-  var width = levelImage.width, height = levelImage.height;
-  var imageData = getImageData(levelImage);
-  for (var y = 0; y < height; y++) {
-    for (var x = 0; x < width; x++) {
-      var color = colorAt(imageData.data, 4 * (width * y + x));
-      var cell = x + "," + y;
-      switch (color) {
-        case "#ff0000": walls.set(cell, diamonds); break;
-        case "#00ff00": walls.set(cell, clubs); break;
-        case "#0000ff": walls.set(cell, hearts); break;
-        case "#ff8800": walls.set(cell, spades); break;
-        case "#888888": walls.set(cell, endBrick); break;
-        case "#000000": walls.set(cell, brick); break;
-        case "#0088ff": player.x = x; player.y = y; break;
-      }
-    }
-  }
   while (true) {
     music.volume = inputs.get("TOGGLE:MUSIC") ? 0.2 : 0;
     updatePlayer();
