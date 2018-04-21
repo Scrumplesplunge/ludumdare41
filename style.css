@@ -1,4 +1,7 @@
-body { background: black; }
+body {
+  background: black;
+  overflow: hidden;
+}
 
 #display {
   background: white;

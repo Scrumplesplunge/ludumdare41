@@ -14,6 +14,7 @@ canvas.height = HEIGHT;
 canvas.style.width = SCALE * WIDTH + "px";
 canvas.style.height = SCALE * HEIGHT + "px";
 const context = canvas.getContext("2d");
+context.imageSmoothingEnabled = false;
 
 // Automatically resize and position the canvas in the centre of the window.
 function resize() {
@@ -35,9 +36,6 @@ function resize() {
     canvas.style.width = widthIfFullHeight + "px";
     canvas.style.height = window.innerHeight + "px";
   }
-  // After changing the canvas dimensions, the context resets and has to be
-  // reconfigured.
-  context.imageSmoothingEnabled = false;
 }
 resize();
 window.addEventListener("resize", resize);
@@ -62,12 +60,6 @@ function getImageData(image) {
   context.drawImage(image, 0, 0);
   return context.getImageData(0, 0, image.width, image.height);
 }
-
-var mouse = {x: 208, y: 272};
-display.addEventListener("mousemove", event => {
-  mouse.x = event.offsetX;
-  mouse.y = event.offsetY;
-});
 
 function delay(ms) {
   return new Promise((resolve, reject) => setTimeout(resolve, ms));
