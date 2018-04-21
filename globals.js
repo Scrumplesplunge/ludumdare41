@@ -69,4 +69,8 @@ const levelColorMap = new Map([
   ["#000000", "wall:brick"],
   ["#0088ff", "object:player"],
   ["#ffff00", "instance:star"],
+  ["#008800", "instance:enemy"],
+  ["#00ffff", "instance:health"],
+  ["#8800ff", "instance:attack"],
+  ["#ff00ff", "wall:stack"],
 ]);

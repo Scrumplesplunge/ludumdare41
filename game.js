@@ -19,6 +19,30 @@ async function loadMusic() {
   inputs.set("TOGGLE:MUSIC", 1);  // Music toggle is default-enabled.
 }
 
+async function loadImages(images) {
+  async function loadSingleImage(name) {
+    return [name, await loadImage(name + ".png")];
+  }
+  return new Map(await Promise.all(images.map(loadSingleImage)));
+}
+
+var loadWallImages = () => loadImages([
+  "brick",
+  "clubs",
+  "diamonds",
+  "end_brick",
+  "hearts",
+  "spades",
+  "stack",
+]);
+
+var loadSpriteImages = () => loadImages([
+  "attack",
+  "enemy",
+  "health",
+  "star",
+]);
+
 async function loadWallImages() {
   return new Map(await Promise.all([
     "brick",
@@ -31,9 +55,9 @@ async function loadWallImages() {
 }
 
 async function loadLevel(name) {
-  let [levelImage, starImage, wallImages] = await Promise.all([
+  let [levelImage, spriteImages, wallImages] = await Promise.all([
     loadImage("level.png"),
-    loadImage("star.png"),
+    loadSpriteImages(),
     loadWallImages(),
   ]);
   var width = levelImage.width, height = levelImage.height;
@@ -43,16 +67,39 @@ async function loadLevel(name) {
     ["player", (x, y) => { player.x = x; player.y = y; }],
   ]);
 
+  function makeAttack(x, y) {
+    return {
+      image: spriteImages.get("attack"),
+      width: 0.25, height: 0.25, x, y,
+    };
+  }
+
+  function makeEnemy(x, y) {
+    return {
+      image: spriteImages.get("enemy"),
+      width: 0.25, height: 0.4, x, y,
+      verticalOffset: 0.1,
+    };
+  }
+
+  function makeHealth(x, y) {
+    return {
+      image: spriteImages.get("health"),
+      width: 0.25, height: 0.25, x, y,
+    };
+  }
+
   function makeStar(x, y) {
     return {
-      image: starImage,
-      width: 0.25,
-      height: 0.25,
-      x, y,
+      image: spriteImages.get("star"),
+      width: 0.25, height: 0.25, x, y,
     };
   }
 
   var instancers = new Map([
+    ["attack", (x, y) => objects.push(makeAttack(x, y))],
+    ["enemy", (x, y) => objects.push(makeEnemy(x, y))],
+    ["health", (x, y) => objects.push(makeHealth(x, y))],
     ["star", (x, y) => objects.push(makeStar(x, y))],
   ]);
 
@@ -83,7 +130,7 @@ async function loadLevel(name) {
         case "instance":
           if (!instancers.has(id))
             throw new Error("Unknown instance type: " + id);
-          instancers.get(id)(x, y);
+          instancers.get(id)(x + 0.5, y + 0.5);
           break;
         default:
           throw new Error("Unhandled color type: " + type);
