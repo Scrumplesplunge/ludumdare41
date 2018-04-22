@@ -19,6 +19,7 @@ async function loadMusic() {
     "punch.ogg",
     "enemy_attack.ogg",
     "enemy_death.ogg",
+    "player_death.ogg",
   ].map(loadSound));
   music = m;
   music.loop = true;
@@ -57,9 +58,12 @@ async function loadLevel(name) {
   var width = levelImage.width, height = levelImage.height;
   var imageData = getImageData(levelImage);
 
-  var objectInitializers = new Map([
-    ["player", (x, y) => { player.x = x; player.y = y; }],
-  ]);
+  function setPlayerSpawn(x, y) {
+    player.x = playerSpawn.x = x;
+    player.y = playerSpawn.y = y;
+  }
+
+  var objectInitializers = new Map([["player", setPlayerSpawn]]);
 
   function makeEnemy(x, y) {
     return {
@@ -73,9 +77,8 @@ async function loadLevel(name) {
   function collect(item) {
     switch (item.type) {
       case "health":
-        if (player.health != player.maxHealth) {
-          player.health = player.maxHealth;
-        }
+        if (player.health == player.maxHealth) return;
+        player.health = player.maxHealth;
         break;
       case "star":
         player.health++;
@@ -169,13 +172,22 @@ async function loadLevel(name) {
 
   onInput("ATTACK", 1, () => {
     if (player.targetEnemy) {
-      playSound(player.weapon.hitSound);
-      player.targetEnemy.health -= player.weapon.damage;
+      var weapon = weapons[player.weapon];
+      playSound(weapon.hitSound);
+      player.targetEnemy.health -= weapon.damage;
     }
   });
 }
 
 function updatePlayer() {
+  // Handle player death.
+  if (player.health <= 0) {
+    playSound("player_death");
+    player.health = player.maxHealth = INITIAL_MAX_HEALTH;
+    player.x = playerSpawn.x;
+    player.y = playerSpawn.y;
+    player.weapon = 0;
+  }
   // Move the player based on inputs.
   var forwardMove = inputs.get("FORWARDS") - inputs.get("BACKWARDS");
   var sideMove = inputs.get("STRAFE_RIGHT") - inputs.get("STRAFE_LEFT");
@@ -202,18 +214,19 @@ function updatePlayer() {
   // Set the target block if close enough to one.
   var {distance, block} = cast(player.x, player.y, player.angle);
   player.targetBlock = distance < INTERACT_DISTANCE ? block : null;
+  var playerWeapon = weapons[player.weapon];
   // Set the target enemy if one is in range.
   function enemyDistance(enemy) {
     var dx = enemy.x - player.x, dy = enemy.y - player.y;
     var forwardDistance = c * dx + s * dy;
     var sideDistance = Math.abs(-s * dx + c * dy);
-    if (sideDistance > player.weapon.sweep) return Infinity;
+    if (sideDistance > playerWeapon.sweep) return Infinity;
     if (forwardDistance < 0) return Infinity;
     return forwardDistance;
   }
   var potentialTargets =
       enemies.map(e => [enemyDistance(e), e])
-             .filter(([d, e]) => d < player.weapon.range)
+             .filter(([d, e]) => d < playerWeapon.range)
              .sort(([d1, e1], [d2, e2]) => d1 - d2)
              .map(([d, e]) => e);
   player.targetEnemy = potentialTargets.length > 0 ? potentialTargets[0] : null;
@@ -244,7 +257,7 @@ function updateEnemies() {
     // Only move towards the player if the player is close enough and there is a
     // clear line of sight.
     if (playerDistance > ENEMY_FOLLOW_RANGE) continue;
-    if (playerDistance > 0.5) {
+    if (playerDistance > 0.8) {
       // Chase the player.
       var {distance, hit} = cast(enemy.x, enemy.y, Math.atan2(dy, dx));
       if (distance < playerDistance) continue;
@@ -268,7 +281,7 @@ function drawHelp() {
 
 function drawHud() {
   // Show the player weapon.
-  var image = player.weapon.image();
+  var image = weapons[player.weapon].image();
   var w = WEAPON_SCALE * image.width, h = WEAPON_SCALE * image.height;
   context.drawImage(image, WIDTH - w, HEIGHT - h, w, h);
   // Display elapsed time.

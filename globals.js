@@ -7,6 +7,7 @@ const FOG_COLOR = "#000000";
 const FOG_DISTANCE = 5;
 const FOV = 90 * Math.PI / 180;
 const HEIGHT = 108;
+const INITIAL_MAX_HEALTH = 3;
 const INTERACT_DISTANCE = 1;
 const ITEM_COLLECT_DISTANCE = 0.5;
 const MOVE_SPEED = 3;
@@ -34,19 +35,23 @@ const Weapon = {
     hitSound: "punch",
   },
 };
+const weapons = [  // This is the order that weapons are acquired.
+  Weapon.fist,
+];
 
 const startTime = Date.now();
 const canvas = document.getElementById("display");
 const context = canvas.getContext("2d");
 const items = [];
 const enemies = [];
+const playerSpawn = {x: 0, y: 0};
 const player = {
-  health: 3,
-  maxHealth: 3,
+  health: INITIAL_MAX_HEALTH,
+  maxHealth: INITIAL_MAX_HEALTH,
   x: 0, y: 0, angle: 0,
   targetBlock: null,  // Target block for interactions.
   targetEnemy: null,  // Target enemy for attacks.
-  weapon: Weapon.fist,
+  weapon: 0,  // Index into weapons.
 };
 const solitaire = {
   blocks: new Map,
