@@ -11,12 +11,9 @@ async function loadFont() {
 async function loadMusic() {
   music = await loadSound("music.ogg");
   music.loop = true;
-  // Set the music to 0 volume - the game loop will overwrite this soon but
-  // defaulting to 0 rather than 1 saves us from getting a very loud noise for
-  // a brief instant before a better volume is set.
-  music.volume = 0;
+  music.volume = 0.2;
   music.play();
-  inputs.set("TOGGLE:MUSIC", 1);  // Music toggle is default-enabled.
+  onInput("MUSIC", 1, () => music.paused ? music.play() : music.pause());
 }
 
 var loadWallImages = () => loadImages([
@@ -108,6 +105,16 @@ async function loadLevel(name) {
       }
     }
   }
+
+  onInput("PRIMARY_INTERACT", 1, () => {
+    var action = player.targetBlock.primaryAction;
+    if (action && action.available()) action.perform();
+  });
+
+  onInput("SECONDARY_INTERACT", 1, () => {
+    var action = player.targetBlock.secondaryAction;
+    if (action && action.available()) action.perform();
+  });
 }
 
 function updatePlayer() {
@@ -153,8 +160,8 @@ function drawHud() {
   // Display the music indicator.
   var musicMessage = [
     "Help (H) Music ",
-    [inputs.get("TOGGLE:MUSIC") ? "#00ff00" : "#ff0000"],
-    inputs.get("TOGGLE:MUSIC") ? "On" : "Off",
+    [music.paused ? "#ff0000" : "#00ff00"],
+    music.paused ? "Off" : "On",
   ];
   text(context, WIDTH - 1 - measureText(...musicMessage), 2, ...musicMessage);
   // Format the player's card list.
@@ -168,6 +175,25 @@ function drawHud() {
         [["#ffffff"], "[", ...first, ["#ffffff"], "]", ...[].concat(...rest)];
   }
   text(context, 2, HEIGHT - 8, ...cardList);
+  // Show interaction options for the target block.
+  if (player.targetBlock) {
+    var block = player.targetBlock;
+    function showInteractionMessage(action, key, y) {
+      var available = action.available();
+      var style = available ? "#ffff00" : "#888888";
+      var message = "(" + key + ") " + action.description;
+      var x = Math.floor(0.5 * (WIDTH - 6 * message.length));
+      text(context, x, y, [style], message);
+    }
+    if (block.primaryAction) {
+      showInteractionMessage(
+          block.primaryAction, controlMap.get("PRIMARY_INTERACT"), HEIGHT - 23);
+    }
+    if (block.secondaryAction) {
+      showInteractionMessage(block.secondaryAction,
+                             controlMap.get("SECONDARY_INTERACT"), HEIGHT - 16);
+    }
+  }
 }
 
 async function main() {
@@ -177,7 +203,6 @@ async function main() {
     loadLevel("level.png"),
   ]);
   while (true) {
-    music.volume = inputs.get("TOGGLE:MUSIC") ? 0.2 : 0;
     updatePlayer();
     updateSolitaireSprites();
     drawWorld(player.x, player.y, player.angle);

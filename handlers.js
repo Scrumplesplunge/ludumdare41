@@ -22,10 +22,20 @@ function resize() {
 resize();
 window.addEventListener("resize", resize);
 
+var edgeHandlers = new Map;
+function onInput(input, state, handler) {
+  if (!edgeHandlers.has(input)) edgeHandlers.set(input, [[], []]);
+  var handlers = edgeHandlers.get(input);
+  handlers[state].push(handler);
+}
+
 // Set or unset inputs when keys are pressed.
 function handleKeyCode(code, state) {
   if (!keyMap.has(event.code)) return;
   var input = keyMap.get(event.code);
+  if (edgeHandlers.has(input)) {
+    for (var handler of edgeHandlers.get(input)[state]) handler();
+  }
   if (input.substr(0, 7) == "TOGGLE:") {
     // Toggle the value on keydown.
     if (state == 1) inputs.set(input, 1 - inputs.get(input));

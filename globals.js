@@ -24,7 +24,10 @@ const canvas = document.getElementById("display");
 const context = canvas.getContext("2d");
 const items = [];
 const enemies = [];
-const player = {x: 0, y: 0, angle: 0};
+const player = {
+  x: 0, y: 0, angle: 0,
+  targetBlock: null,  // Target block for interactions.
+};
 const solitaire = {
   blocks: new Map,
   // Numeric value of the highest card placed on each suit stack.
@@ -38,7 +41,7 @@ const solitaire = {
   stacks: [["K#"], ["\"&"], ["5%", "4$", "3&", "2#", "A%"], ["A&"]],
   // Player inventory stack. This is a working stack which ascends in value
   // rather than descending, but must still alternate in colour.
-  playerStack: [],
+  playerStack: ["9#"],
 };
 // Map from "x,y" to {image, primaryAction, secondaryAction}.
 const walls = new Map;
@@ -53,9 +56,10 @@ const controlMap = new Map([
   ["BACKWARDS", "KeyS"],
   ["STRAFE_LEFT", "KeyA"],
   ["STRAFE_RIGHT", "KeyD"],
-  ["INTERACT", "KeyE"],
+  ["PRIMARY_INTERACT", "KeyR"],
+  ["SECONDARY_INTERACT", "KeyF"],
   ["FIRE", "Space"],
-  ["TOGGLE:MUSIC", "KeyM"],
+  ["MUSIC", "KeyM"],
   ["HELP", "KeyH"],
 ]);
 const keyMap = new Map([...controlMap].map(([i, k]) => [k, i]));

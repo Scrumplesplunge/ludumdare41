@@ -90,8 +90,24 @@ function playerPut(place) {
   }
 }
 
+function playerCanTake(stackId) {
+  var toStack = solitaire.playerStack;
+  var fromStack = solitaire.stacks[stackId];
+  if (fromStack.length == 0) return false;
+  if (toStack.length == 0) return true;
+  var fromStackTop = fromStack[fromStack.length - 1];
+  var toStackTop = toStack[toStack.length - 1];
+  return cardColor(fromStackTop) != cardColor(toStackTop) &&
+         cardValue(fromStackTop) == cardValue(toStackTop) + 1;
+}
+
+function playerTake(stackId) {
+  if (!playerCanTake(stackId)) throw new Error("Called take when not allowed.");
+  solitaire.playerStack.push(solitaire.stacks[stackId].pop());
+}
+
 function makeSolitaireWall(place) {
-  return {
+  var wall = {
     image: solitaire.blocks.get(place).canvas,
     primaryAction: {
       description: "Place card",
@@ -100,6 +116,15 @@ function makeSolitaireWall(place) {
     },
     secondaryAction: null,
   };
+  if (place.substr(0, 5) == "stack") {
+    var id = parseInt(place.substr(5), 10);
+    wall.secondaryAction = {
+      description: "Take card",
+      available: () => playerCanTake(id),
+      perform: () => playerTake(id),
+    };
+  }
+  return wall;
 }
 
 function updateSolitaireSprites() {
