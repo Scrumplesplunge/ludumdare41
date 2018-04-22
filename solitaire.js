@@ -1,5 +1,5 @@
 // Create a canvas for each of the suits.
-async function loadSuitSprites() {
+async function loadSuitBlockTextures() {
   var images = await loadImages(
       ["clubs", "diamonds", "hearts", "spades",
        "white_wall_left", "white_wall_middle"]);
@@ -12,14 +12,14 @@ async function loadSuitSprites() {
     canvas.width = background.width;
     canvas.height = background.height;
     var context = canvas.getContext("2d");
-    suitSprites.set(suits[i], {canvas, context, background, icon});
+    suitBlockTextures.set(suits[i], {canvas, context, background, icon});
   }
-  return suitSprites;
+  return suitBlockTextures;
 }
 
 function updateSuitSprites() {
   for (var suit of ["clubs", "diamonds", "hearts", "spades"]) {
-    var {canvas, context, background, icon} = suitSprites.get(suit);
+    var {canvas, context, background, icon} = suitBlockTextures.get(suit);
     context.drawImage(background, 0, 0);
     context.drawImage(icon, 7, 7);
     var stackValue = solitaire[suit];

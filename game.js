@@ -33,13 +33,13 @@ var loadSpriteImages = () => loadImages([
 ]);
 
 async function loadLevel(name) {
-  let [levelImage, spriteImages, suitSprites, wallImages] = await Promise.all([
+  let [levelImage, spriteImages, _, wallImages] = await Promise.all([
     loadImage("level.png"),
     loadSpriteImages(),
-    loadSuitSprites(),
+    loadSuitBlockTextures(),
     loadWallImages(),
   ]);
-  for (var [suit, {canvas}] of suitSprites) wallImages.set(suit, canvas);
+  for (var [suit, {canvas}] of suitBlockTextures) wallImages.set(suit, canvas);
   var width = levelImage.width, height = levelImage.height;
   var imageData = getImageData(levelImage);
 

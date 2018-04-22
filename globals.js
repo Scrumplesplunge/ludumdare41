@@ -40,7 +40,7 @@ const walls = new Map;  // Map from "x,y" to material.
 let fontImage;
 const fontMap = new Map;  // Map from colour to font image.
 let music;  // Music audio handle.
-const suitSprites = new Map;  // Map from suit name to suit block info.
+const suitBlockTextures = new Map;  // Map from suit name to suit block info.
 
 const controlMap = new Map([
   ["TURN_LEFT", "ArrowLeft"],
