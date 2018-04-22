@@ -59,7 +59,7 @@ function cast(x, y, angle) {
   for (var {distance, cell, hit} of walkRay(x, y, angle)) {
     var id = cell.x + "," + cell.y;
     if (walls.has(id))
-      return {distance, material: walls.get(id).image, cell, hit};
+      return {distance, block: walls.get(id), cell, hit};
   }
   return {distance: FOG_DISTANCE};
 }
@@ -112,7 +112,7 @@ function drawWalls(x, y, angle) {
   context.fillStyle = FOG_COLOR;
   for (var i = 0; i < WIDTH; i++) {
     var screenAngle = columnToScreenAngle(i);
-    var {distance, material, cell, hit} = cast(x, y, angle + screenAngle);
+    var {distance, block, cell, hit} = cast(x, y, angle + screenAngle);
     wallDistances[i] = distance;
     // Adjust the distance to correct distortion due to the screen being flat.
     var adjustedDistance = distance * Math.cos(screenAngle);
@@ -125,12 +125,12 @@ function drawWalls(x, y, angle) {
     context.globalAlpha = 1;
     if (hit) {
       var rawColumn = computeTextureColumn(cell, hit);
-      var scaledColumn = Math.floor(material.width * rawColumn);
+      var scaledColumn = Math.floor(block.image.width * rawColumn);
       var textureColumn =
-          Math.max(0, Math.min(material.width - 1, scaledColumn));
+          Math.max(0, Math.min(block.image.width - 1, scaledColumn));
       context.drawImage(
-          material,
-          textureColumn, 0, 1, material.height,  // Texture bounds
+          block.image,
+          textureColumn, 0, 1, block.image.height,  // Texture bounds
           i, columnStart, 1, height);  // Screen bounds
       context.globalAlpha = distance / FOG_DISTANCE;
     }

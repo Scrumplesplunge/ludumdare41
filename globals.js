@@ -5,6 +5,7 @@ const FOG_COLOR = "#000000";
 const FOG_DISTANCE = 5;
 const FOV = 90 * Math.PI / 180;
 const HEIGHT = 108;
+const INTERACT_DISTANCE = 1;
 const MOVE_SPEED = 3;
 const PLAYER_RADIUS = 0.25;
 const SCALE = 5;

@@ -107,11 +107,13 @@ async function loadLevel(name) {
   }
 
   onInput("PRIMARY_INTERACT", 1, () => {
+    if (!player.targetBlock) return;
     var action = player.targetBlock.primaryAction;
     if (action && action.available()) action.perform();
   });
 
   onInput("SECONDARY_INTERACT", 1, () => {
+    if (!player.targetBlock) return;
     var action = player.targetBlock.secondaryAction;
     if (action && action.available()) action.perform();
   });
@@ -141,6 +143,9 @@ function updatePlayer() {
   } else if (dy > 0 && walls.has(cellX + "," + (cellY + 1))) {
     player.y = Math.min(player.y, cellY + 1 - PLAYER_RADIUS);
   }
+  // Set the player's target block if they are close enough to one.
+  var {distance, block} = cast(player.x, player.y, player.angle);
+  player.targetBlock = distance < INTERACT_DISTANCE ? block : null;
 }
 
 function drawHelp() {
