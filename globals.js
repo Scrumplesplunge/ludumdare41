@@ -34,9 +34,27 @@ const Weapon = {
     image: () => weaponImages.get(inputs.get("ATTACK") ? "punch" : "fist"),
     hitSound: "punch",
   },
+  dagger: {
+    range: 0.5,
+    sweep: 0.5,
+    damage: 2,
+    image: () => weaponImages.get(inputs.get("ATTACK") ? "stab" : "dagger"),
+    hitSound: "punch",
+  },
+  pistol: {
+    range: FOG_DISTANCE,
+    sweep: 0.25,
+    damage: 1,
+    image: () => weaponImages.get(
+        inputs.get("ATTACK") ? "pistol_fired" : "pistol"),
+    attackSound: "shoot",
+    hitSound: "punch",
+  },
 };
 const weapons = [  // This is the order that weapons are acquired.
   Weapon.fist,
+  Weapon.dagger,
+  Weapon.pistol,
 ];
 
 const startTime = Date.now();
@@ -84,6 +102,7 @@ const controlMap = new Map([
   ["STRAFE_RIGHT", "KeyD"],
   ["PRIMARY_INTERACT", "KeyR"],
   ["SECONDARY_INTERACT", "KeyF"],
+  ["DROP", "KeyQ"],
   ["ATTACK", "Space"],
   ["MUSIC", "KeyM"],
   ["HELP", "KeyH"],

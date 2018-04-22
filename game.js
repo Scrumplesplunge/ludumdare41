@@ -20,6 +20,7 @@ async function loadMusic() {
     "enemy_attack.ogg",
     "enemy_death.ogg",
     "player_death.ogg",
+    "shoot.ogg",
   ].map(loadSound));
   music = m;
   music.loop = true;
@@ -32,6 +33,10 @@ async function loadWeaponImages() {
   weaponImages = await loadImages([
     "fist",
     "punch",
+    "dagger",
+    "stab",
+    "pistol",
+    "pistol_fired",
   ]);
 }
 
@@ -69,6 +74,10 @@ async function loadLevel(name) {
 
   function collect(item) {
     switch (item.type) {
+      case "attack":
+        if (player.weapon == weapons.length - 1) return;
+        player.weapon++;
+        break;
       case "health":
         if (player.health == player.maxHealth) return;
         player.health = player.maxHealth;
@@ -101,10 +110,8 @@ async function loadLevel(name) {
   function simpleItem(x, y, type) {
     return item(x, y, type, spriteImages.get(type));
   }
-  function dropCard(x, y) {
-    console.log("dropCard");
-    if (deck.length == 0) return;
-    var card = deck.pop();
+  function dropCard(x, y, card) {
+    console.log("dropCard(" + x + ", " + y + ", " + card + ")");
     // Render the card image.
     var canvas = document.createElement("canvas");
     canvas.width = cardBackground.width;
@@ -123,7 +130,10 @@ async function loadLevel(name) {
       health: 2,
       nextAttack: 0,
       attackCooldown: 1000,
-      onDeath: () => dropCard(enemy.x, enemy.y),
+      onDeath: () => {
+        if (deck.length == 0) return;
+        dropCard(enemy.x, enemy.y, deck.pop());
+      },
     };
     return enemy;
   }
@@ -197,11 +207,24 @@ async function loadLevel(name) {
   });
 
   onInput("ATTACK", 1, () => {
+    var weapon = weapons[player.weapon];
+    if (weapon.attackSound) playSound(weapon.attackSound);
     if (player.targetEnemy) {
-      var weapon = weapons[player.weapon];
       playSound(weapon.hitSound);
       player.targetEnemy.health -= weapon.damage;
     }
+  });
+
+  onInput("DROP", 1, () => {
+    if (solitaire.playerStack.length == 0) return;
+    // Cast a ray to check that the card won't be dropped in a wall.
+    var {distance} = cast(player.x, player.y, player.angle);
+    var dropDistance =
+        Math.min(ITEM_COLLECT_DISTANCE + 0.05, distance - PLAYER_RADIUS);
+    var x = player.x + dropDistance * Math.cos(player.angle);
+    var y = player.y + dropDistance * Math.sin(player.angle);
+    debugger;
+    dropCard(x, y, solitaire.playerStack.pop());
   });
 }
 
