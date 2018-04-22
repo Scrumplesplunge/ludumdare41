@@ -25,6 +25,9 @@ function loadSound(name) {
   });
 }
 
+// Play a sound.
+function playSound(name) { return (new Audio(name + ".ogg")).play(); }
+
 // Extract image data from an image.
 function getImageData(image) {
   // We need the image to be on a canvas to extract the image data.

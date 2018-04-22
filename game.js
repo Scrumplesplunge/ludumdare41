@@ -9,7 +9,11 @@ async function loadFont() {
 }
 
 async function loadMusic() {
-  music = await loadSound("music.ogg");
+  // This list includes sounds which will be used later so that they don't need
+  // to be fetched when they are first played.
+  var [m, g, p] =
+      await Promise.all(["music.ogg", "get.ogg", "put.ogg"].map(loadSound));
+  music = m;
   music.loop = true;
   music.volume = 0.2;
   music.play();
@@ -109,13 +113,19 @@ async function loadLevel(name) {
   onInput("PRIMARY_INTERACT", 1, () => {
     if (!player.targetBlock) return;
     var action = player.targetBlock.primaryAction;
-    if (action && action.available()) action.perform();
+    if (action && action.available()) {
+      playSound("put");
+      action.perform();
+    }
   });
 
   onInput("SECONDARY_INTERACT", 1, () => {
     if (!player.targetBlock) return;
     var action = player.targetBlock.secondaryAction;
-    if (action && action.available()) action.perform();
+    if (action && action.available()) {
+      playSound("get");
+      action.perform();
+    }
   });
 }
 
