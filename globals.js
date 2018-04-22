@@ -23,15 +23,16 @@ const context = canvas.getContext("2d");
 const objects = [];
 const player = {x: 0, y: 0, angle: 0};
 const solitaire = {
+  blocks: new Map,
   // Numeric value of the highest card placed on each suit stack.
   hearts: 1,
   clubs: 2,
   diamonds: 13,
   spades: 10,
-  // Array of working stacks, each corresponding to a working stack block. Each
-  // working stack is an array of card names which have alternating colours and
-  // descend in value consecutively.
-  stacks: [],
+  // Working stacks, each corresponding to a working stack block. Each working
+  // stack is an array of card names which have alternating colours and descend
+  // in value consecutively.
+  stacks: [["K#"], ["\"&"], ["5%", "4$", "3&", "2#", "A%"], ["A&"]],
   // Player inventory stack. This is a working stack which ascends in value
   // rather than descending, but must still alternate in colour.
   playerStack: [],
@@ -40,7 +41,6 @@ const walls = new Map;  // Map from "x,y" to material.
 let fontImage;
 const fontMap = new Map;  // Map from colour to font image.
 let music;  // Music audio handle.
-const suitBlockTextures = new Map;  // Map from suit name to suit block info.
 
 const controlMap = new Map([
   ["TURN_LEFT", "ArrowLeft"],
@@ -70,5 +70,8 @@ const levelColorMap = new Map([
   ["#008800", "instance:enemy"],
   ["#00ffff", "instance:health"],
   ["#8800ff", "instance:attack"],
-  ["#ff00ff", "wall:stack"],
+  ["#ff0088", "wall:stack0"],
+  ["#88ff00", "wall:stack1"],
+  ["#00ff88", "wall:stack2"],
+  ["#ff00ff", "wall:stack3"],
 ]);

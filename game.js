@@ -33,13 +33,14 @@ var loadSpriteImages = () => loadImages([
 ]);
 
 async function loadLevel(name) {
-  let [levelImage, spriteImages, _, wallImages] = await Promise.all([
+  let [levelImage, spriteImages, _, wallTextures] = await Promise.all([
     loadImage("level.png"),
     loadSpriteImages(),
-    loadSuitBlockTextures(),
+    loadSolitaireBlockTextures(),
     loadWallImages(),
   ]);
-  for (var [suit, {canvas}] of suitBlockTextures) wallImages.set(suit, canvas);
+  for (var [type, {canvas}] of solitaire.blocks)
+    wallTextures.set(type, canvas);
   var width = levelImage.width, height = levelImage.height;
   var imageData = getImageData(levelImage);
 
@@ -97,7 +98,7 @@ async function loadLevel(name) {
         case "floor":
           break;
         case "wall":
-          walls.set(cell, wallImages.get(id));
+          walls.set(cell, wallTextures.get(id));
           break;
         case "object":
           if (objectIds.has(id))
@@ -188,7 +189,7 @@ async function main() {
   while (true) {
     music.volume = inputs.get("TOGGLE:MUSIC") ? 0.2 : 0;
     updatePlayer();
-    updateSuitSprites();
+    updateSolitaireSprites();
     drawWorld(player.x, player.y, player.angle);
     inputs.get("HELP") ? drawHelp() : drawHud();
     await delay(DELTA_TIME);
