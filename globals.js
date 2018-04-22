@@ -102,7 +102,7 @@ const controlMap = new Map([
   ["STRAFE_RIGHT", "KeyD"],
   ["PRIMARY_INTERACT", "KeyR"],
   ["SECONDARY_INTERACT", "KeyF"],
-  ["DROP", "KeyQ"],
+  ["DROP", "KeyX"],
   ["ATTACK", "Space"],
   ["MUSIC", "KeyM"],
   ["HELP", "KeyH"],
