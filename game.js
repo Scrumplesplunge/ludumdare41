@@ -19,17 +19,10 @@ async function loadMusic() {
   inputs.set("TOGGLE:MUSIC", 1);  // Music toggle is default-enabled.
 }
 
-async function loadImages(images) {
-  async function loadSingleImage(name) {
-    return [name, await loadImage(name + ".png")];
-  }
-  return new Map(await Promise.all(images.map(loadSingleImage)));
-}
-
 var loadWallImages = () => loadImages([
   "brick",
-  "end_brick",
   "stack",
+  "white_wall_right",
 ]);
 
 var loadSpriteImages = () => loadImages([

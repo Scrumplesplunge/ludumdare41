@@ -1,22 +1,27 @@
 // Create a canvas for each of the suits.
 async function loadSuitSprites() {
-  var suits = ["clubs", "diamonds", "hearts", "spades"];
-  var suitImages = new Map(await Promise.all(
-      suits.map(async name => [name, await loadImage(name + ".png")])));
-  for (var [suit, image] of suitImages) {
+  var images = await loadImages(
+      ["clubs", "diamonds", "hearts", "spades",
+       "white_wall_left", "white_wall_middle"]);
+  var suits = ["diamonds", "clubs", "hearts", "spades"];  // Wall order.
+  for (var i = 0; i < 4; i++) {
+    var icon = images.get(suits[i]);
+    var background =
+        images.get(i == 0 ? "white_wall_left" : "white_wall_middle");
     var canvas = document.createElement("canvas");
-    canvas.width = image.width;
-    canvas.height = image.height;
+    canvas.width = background.width;
+    canvas.height = background.height;
     var context = canvas.getContext("2d");
-    suitSprites.set(suit, {canvas, context, image});
+    suitSprites.set(suits[i], {canvas, context, background, icon});
   }
   return suitSprites;
 }
 
 function updateSuitSprites() {
   for (var suit of ["clubs", "diamonds", "hearts", "spades"]) {
-    var {canvas, context, image} = suitSprites.get(suit);
-    context.drawImage(image, 0, 0);
+    var {canvas, context, background, icon} = suitSprites.get(suit);
+    context.drawImage(background, 0, 0);
+    context.drawImage(icon, 7, 7);
     var stackValue = solitaire[suit];
     if (stackValue == 0) continue;
     if (stackValue == 10) {

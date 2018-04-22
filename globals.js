@@ -63,7 +63,7 @@ const levelColorMap = new Map([
   ["#00ff00", "wall:clubs"],
   ["#0000ff", "wall:hearts"],
   ["#ff8800", "wall:spades"],
-  ["#888888", "wall:end_brick"],
+  ["#888888", "wall:white_wall_right"],
   ["#000000", "wall:brick"],
   ["#0088ff", "object:player"],
   ["#ffff00", "instance:star"],

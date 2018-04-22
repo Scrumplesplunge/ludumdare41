@@ -8,6 +8,13 @@ function loadImage(name) {
   });
 }
 
+async function loadImages(images) {
+  async function loadSingleImage(name) {
+    return [name, await loadImage(name + ".png")];
+  }
+  return new Map(await Promise.all(images.map(loadSingleImage)));
+}
+
 // Asynchronously load a sound file.
 function loadSound(name) {
   return new Promise((resolve, reject) => {
