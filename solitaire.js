@@ -1,7 +1,25 @@
 var solitaireImages;
 var workingStacks = [];
+var deck = [];
 
 function card(suit, value) { return "A23456789\"JQK"[value - 1] + suit; }
+
+// Generate a shuffled deck of cards.
+for (var suit in Suit) if (Suit.hasOwnProperty(suit)) {
+  for (var i = 1; i <= 13; i++) {
+    deck.push(card(Suit[suit], i));
+  }
+}
+for (var i = deck.length; i > 0; i--) {
+  var j = Math.floor(i * Math.random());
+  var temp = deck[j];
+  deck[j] = deck[i - 1];
+  deck[i - 1] = temp;
+}
+for (var i = 0, n = solitaire.stacks.length; i < n; i++) {
+  solitaire.stacks[i].push(deck.pop());
+}
+solitaire.playerStack.push(deck.pop());
 
 function cardColor(card) {
   switch (card[1]) {
@@ -96,15 +114,19 @@ function playerPut(place) {
   }
 }
 
+function playerCanTakeCard(card) {
+  var stack = solitaire.playerStack;
+  if (stack.length == 0) return true;
+  var stackTop = stack[stack.length - 1];
+  return cardColor(stackTop) != cardColor(card) &&
+         cardValue(stackTop) == cardValue(card) - 1;
+}
+
 function playerCanTake(stackId) {
   var toStack = solitaire.playerStack;
   var fromStack = solitaire.stacks[stackId];
   if (fromStack.length == 0) return false;
-  if (toStack.length == 0) return true;
-  var fromStackTop = fromStack[fromStack.length - 1];
-  var toStackTop = toStack[toStack.length - 1];
-  return cardColor(fromStackTop) != cardColor(toStackTop) &&
-         cardValue(fromStackTop) == cardValue(toStackTop) + 1;
+  return playerCanTakeCard(fromStack[fromStack.length - 1]);
 }
 
 function playerTake(stackId) {

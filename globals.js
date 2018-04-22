@@ -57,22 +57,17 @@ const solitaire = {
   win: false,
   blocks: new Map,
   // Numeric value of the highest card placed on each suit stack.
-  hearts: 13,
-  clubs: 13,
-  diamonds: 6,
-  spades: 6,
+  hearts: 0,
+  clubs: 0,
+  diamonds: 0,
+  spades: 0,
   // Working stacks, each corresponding to a working stack block. Each working
   // stack is an array of card names which have alternating colours and descend
   // in value consecutively.
-  stacks: [
-    ["K$", "Q&", "J$", "\"&"],
-    ["K&", "Q$", "J&"],
-    ["9$", "8&", "7$"],
-    ["8$", "7&"],
-  ],
+  stacks: [[], [], [], []],
   // Player inventory stack. This is a working stack which ascends in value
   // rather than descending, but must still alternate in colour.
-  playerStack: ["9&", "\"$"],
+  playerStack: [],
 };
 // Map from "x,y" to {image, primaryAction, secondaryAction}.
 const walls = new Map;

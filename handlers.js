@@ -19,7 +19,7 @@ function resize() {
     canvas.style.height = window.innerHeight + "px";
   }
 }
-resize();
+window.addEventListener("load", resize);
 window.addEventListener("resize", resize);
 
 var edgeHandlers = new Map;

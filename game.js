@@ -49,8 +49,10 @@ var loadSpriteImages = () => loadImages([
 ]);
 
 async function loadLevel(name) {
-  let [levelImage, spriteImages, _, wallTextures] = await Promise.all([
+  let [levelImage, cardBackground, spriteImages, _, wallTextures] =
+      await Promise.all([
     loadImage("level.png"),
+    loadImage("card.png"),
     loadSpriteImages(),
     loadSolitaireBlockTextures(),
     loadWallImages(),
@@ -65,15 +67,6 @@ async function loadLevel(name) {
 
   var objectInitializers = new Map([["player", setPlayerSpawn]]);
 
-  function makeEnemy(x, y) {
-    return {
-      image: spriteImages.get("enemy"),
-      x, y,
-      health: 2,
-      nextAttack: 0,
-      attackCooldown: 1000,
-    };
-  }
   function collect(item) {
     switch (item.type) {
       case "health":
@@ -84,16 +77,20 @@ async function loadLevel(name) {
         player.health++;
         player.maxHealth++;
         break;
+      case "card":
+        if (!playerCanTakeCard(item.card)) return;
+        solitaire.playerStack.push(item.card);
+        break;
       default:
         return;
     }
     playSound("collect");
     item.removed = true;
   }
-  function item(x, y, type, onCollect) {
+  function item(x, y, type, image) {
     var item = {
       type: type,
-      image: spriteImages.get(type),
+      image: image,
       phaseOffset: 2 * Math.PI * Math.random(),
       x, y,
       onCollect: () => collect(item),
@@ -101,12 +98,41 @@ async function loadLevel(name) {
     };
     return item;
   }
+  function simpleItem(x, y, type) {
+    return item(x, y, type, spriteImages.get(type));
+  }
+  function dropCard(x, y) {
+    console.log("dropCard");
+    if (deck.length == 0) return;
+    var card = deck.pop();
+    // Render the card image.
+    var canvas = document.createElement("canvas");
+    canvas.width = cardBackground.width;
+    canvas.height = cardBackground.height;
+    var context = canvas.getContext("2d");
+    context.drawImage(cardBackground, 0, 0);
+    text(context, 5, 8, [cardColor(card)], card);
+    var cardItem = item(x, y, "card", canvas);
+    cardItem.card = card;
+    items.push(cardItem);
+  }
+  function makeEnemy(x, y) {
+    var enemy = {
+      image: spriteImages.get("enemy"),
+      x, y,
+      health: 2,
+      nextAttack: 0,
+      attackCooldown: 1000,
+      onDeath: () => dropCard(enemy.x, enemy.y),
+    };
+    return enemy;
+  }
 
   var instancers = new Map([
-    ["attack", (x, y) => items.push(item(x, y, "attack"))],
+    ["attack", (x, y) => items.push(simpleItem(x, y, "attack"))],
     ["enemy", (x, y) => enemies.push(makeEnemy(x, y))],
-    ["health", (x, y) => items.push(item(x, y, "health"))],
-    ["star", (x, y) => items.push(item(x, y, "star"))],
+    ["health", (x, y) => items.push(simpleItem(x, y, "health"))],
+    ["star", (x, y) => items.push(simpleItem(x, y, "star"))],
   ]);
 
   walls.clear();
@@ -248,6 +274,7 @@ function updateEnemies() {
       enemies[j++] = enemies[i];
     } else {
       playSound("enemy_death");
+      enemies[i].onDeath();
     }
   }
   enemies.splice(j);
