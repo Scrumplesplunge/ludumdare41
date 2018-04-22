@@ -5,11 +5,11 @@ function card(suit, value) { return "A23456789\"JQK"[value - 1] + suit; }
 
 function cardColor(card) {
   switch (card[1]) {
-    case HEARTS:
-    case DIAMONDS:
+    case Suit.diamonds:
+    case Suit.hearts:
       return "#ff0000";
-    case CLUBS:
-    case SPADES:
+    case Suit.clubs:
+    case Suit.spades:
       return "#000000";
   }
 }
@@ -62,6 +62,44 @@ async function loadSolitaireBlockTextures() {
     var context = canvas.getContext("2d");
     solitaire.blocks.set("stack" + i, {canvas, context, background});
   }
+}
+
+function playerCanPut(place) {
+  if (solitaire.playerStack.length == 0) return false;
+  var card = solitaire.playerStack[solitaire.playerStack.length - 1];
+  if (Suit.hasOwnProperty(place)) {
+    return card[1] == Suit[place] && cardValue(card) == solitaire[place] + 1;
+  }
+  if (place.substr(0, 5) != "stack")
+    throw new Error("Unknown place.");
+  var stack = solitaire.stacks[parseInt(place.substr(5), 10)];
+  if (stack.length == 0) return true;
+  var stackTop = stack[stack.length - 1];
+  return cardColor(card) != cardColor(stackTop) &&
+         cardValue(card) == cardValue(stackTop) - 1;
+}
+
+function playerPut(place) {
+  if (!playerCanPut(place)) throw new Error("Called put when not allowed.");
+  var card = solitaire.playerStack.pop();
+  if (Suit.hasOwnProperty(place)) {
+    solitaire[place] = cardValue(card);
+  } else {
+    var stack = solitaire.stacks[parseInt(place.substr(5), 10)];
+    stack.push(card);
+  }
+}
+
+function makeSolitaireWall(place) {
+  return {
+    image: solitaire.blocks.get(place).canvas,
+    primaryAction: {
+      description: "Place card",
+      available: () => playerCanPut(place),
+      perform: () => playerPut(place),
+    },
+    secondaryAction: null,
+  };
 }
 
 function updateSolitaireSprites() {

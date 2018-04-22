@@ -58,7 +58,8 @@ function* walkRay(x, y, angle) {
 function cast(x, y, angle) {
   for (var {distance, cell, hit} of walkRay(x, y, angle)) {
     var id = cell.x + "," + cell.y;
-    if (walls.has(id)) return {distance, material: walls.get(id), cell, hit};
+    if (walls.has(id))
+      return {distance, material: walls.get(id).image, cell, hit};
   }
   return {distance: FOG_DISTANCE};
 }

@@ -12,10 +12,12 @@ const TURN_SPEED = 5;
 const WALL_HEIGHT = 0.5;
 const WIDTH = 192;
 
-const CLUBS = "%";
-const DIAMONDS = "$";
-const HEARTS = "#";
-const SPADES = "&";
+const Suit = {
+  clubs: "%",
+  diamonds: "$",
+  hearts: "#",
+  spades: "&",
+};
 
 const startTime = Date.now();
 const canvas = document.getElementById("display");
@@ -38,7 +40,8 @@ const solitaire = {
   // rather than descending, but must still alternate in colour.
   playerStack: [],
 };
-const walls = new Map;  // Map from "x,y" to material.
+// Map from "x,y" to {image, primaryAction, secondaryAction}.
+const walls = new Map;
 let fontImage;
 const fontMap = new Map;  // Map from colour to font image.
 let music;  // Music audio handle.
@@ -60,10 +63,6 @@ const inputs = new Map([...controlMap].map(([i, k]) => [i, 0]));
 
 const levelColorMap = new Map([
   ["#ffffff", "floor:"],
-  ["#ff0000", "wall:diamonds"],
-  ["#00ff00", "wall:clubs"],
-  ["#0000ff", "wall:hearts"],
-  ["#ff8800", "wall:spades"],
   ["#888888", "wall:white_wall_right"],
   ["#000000", "wall:brick"],
   ["#0088ff", "object:player"],
@@ -71,8 +70,12 @@ const levelColorMap = new Map([
   ["#008800", "instance:enemy"],
   ["#00ffff", "instance:health"],
   ["#8800ff", "instance:attack"],
-  ["#ff0088", "wall:stack0"],
-  ["#88ff00", "wall:stack1"],
-  ["#00ff88", "wall:stack2"],
-  ["#ff00ff", "wall:stack3"],
+  ["#ff0000", "solitaire:diamonds"],
+  ["#00ff00", "solitaire:clubs"],
+  ["#0000ff", "solitaire:hearts"],
+  ["#ff8800", "solitaire:spades"],
+  ["#ff0088", "solitaire:stack0"],
+  ["#88ff00", "solitaire:stack1"],
+  ["#00ff88", "solitaire:stack2"],
+  ["#ff00ff", "solitaire:stack3"],
 ]);

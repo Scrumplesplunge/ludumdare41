@@ -39,8 +39,6 @@ async function loadLevel(name) {
     loadSolitaireBlockTextures(),
     loadWallImages(),
   ]);
-  for (var [type, {canvas}] of solitaire.blocks)
-    wallTextures.set(type, canvas);
   var width = levelImage.width, height = levelImage.height;
   var imageData = getImageData(levelImage);
 
@@ -83,7 +81,14 @@ async function loadLevel(name) {
         case "floor":
           break;
         case "wall":
-          walls.set(cell, wallTextures.get(id));
+          walls.set(cell, {
+            image: wallTextures.get(id),
+            primaryAction: null,
+            secondaryAction: null,
+          });
+          break;
+        case "solitaire":
+          walls.set(cell, makeSolitaireWall(id));
           break;
         case "object":
           if (objectIds.has(id))
