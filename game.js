@@ -12,7 +12,14 @@ async function loadMusic() {
   // This list includes sounds which will be used later so that they don't need
   // to be fetched when they are first played.
   var [m, ...preloaded] = await Promise.all([
-      "music.ogg", "get.ogg", "put.ogg", "collect.ogg"].map(loadSound));
+    "music.ogg",
+    "get.ogg",
+    "put.ogg",
+    "collect.ogg",
+    "punch.ogg",
+    "enemy_attack.ogg",
+    "enemy_death.ogg",
+  ].map(loadSound));
   music = m;
   music.loop = true;
   music.volume = 0.2;
@@ -54,13 +61,29 @@ async function loadLevel(name) {
     ["player", (x, y) => { player.x = x; player.y = y; }],
   ]);
 
-  function makeEnemy(x, y) { return {image: spriteImages.get("enemy"), x, y}; }
+  function makeEnemy(x, y) {
+    return {
+      image: spriteImages.get("enemy"),
+      x, y,
+      health: 2,
+      nextAttack: 0,
+      attackCooldown: 1000,
+    };
+  }
   function collect(item) {
-    playSound("collect");
-    item.removed = true;
+    switch (item.type) {
+      case "health":
+        if (player.health != player.maxHealth) {
+          player.health = player.maxHealth;
+          playSound("collect");
+          item.removed = true;
+        }
+        break;
+    }
   }
   function item(x, y, type, onCollect) {
     var item = {
+      type: type,
       image: spriteImages.get(type),
       phaseOffset: 2 * Math.PI * Math.random(),
       x, y,
@@ -139,7 +162,10 @@ async function loadLevel(name) {
   });
 
   onInput("ATTACK", 1, () => {
-    if (player.targetEnemy) playSound(player.weapon.hitSound);
+    if (player.targetEnemy) {
+      playSound(player.weapon.hitSound);
+      player.targetEnemy.health -= player.weapon.damage;
+    }
   });
 }
 
@@ -195,6 +221,37 @@ function updatePlayer() {
   }
 }
 
+function updateEnemies() {
+  var now = Date.now();
+  // Remove any dead enemies.
+  for (var i = 0, j = 0, n = enemies.length; i < n; i++) {
+    if (enemies[i].health > 0) {
+      enemies[j++] = enemies[i];
+    } else {
+      playSound("enemy_death");
+    }
+  }
+  enemies.splice(j);
+  for (var enemy of enemies) {
+    var dx = player.x - enemy.x, dy = player.y - enemy.y;
+    var playerDistance = Math.sqrt(dx * dx + dy * dy);
+    // Only move towards the player if the player is close enough and there is a
+    // clear line of sight.
+    if (playerDistance > ENEMY_FOLLOW_RANGE) continue;
+    if (playerDistance > 0.5) {
+      // Chase the player.
+      var {distance, hit} = cast(enemy.x, enemy.y, Math.atan2(dy, dx));
+      if (distance < playerDistance) continue;
+      enemy.x += ENEMY_SPEED * DELTA_TIME * dx / distance;
+      enemy.y += ENEMY_SPEED * DELTA_TIME * dy / distance;
+    } else if (now > enemy.nextAttack) {
+      playSound("enemy_attack");
+      player.health--;
+      enemy.nextAttack = now + enemy.attackCooldown;
+    }
+  }
+}
+
 function drawHelp() {
   var i = 0;
   for (var [input, key] of controlMap) {
@@ -204,6 +261,10 @@ function drawHelp() {
 }
 
 function drawHud() {
+  // Show the player weapon.
+  var image = player.weapon.image();
+  var w = WEAPON_SCALE * image.width, h = WEAPON_SCALE * image.height;
+  context.drawImage(image, WIDTH - w, HEIGHT - h, w, h);
   // Display elapsed time.
   var timeTaken = (Date.now() - startTime) / 1000;
   var minutes = (timeTaken / 60 | 0), seconds = timeTaken % 60 | 0;
@@ -246,10 +307,9 @@ function drawHud() {
                              controlMap.get("SECONDARY_INTERACT"), HEIGHT - 16);
     }
   }
-  // Show the player weapon.
-  var image = player.weapon.image();
-  var w = WEAPON_SCALE * image.width, h = WEAPON_SCALE * image.height;
-  context.drawImage(image, WIDTH - w, HEIGHT - h, w, h);
+  // Draw health.
+  text(context, 5, HEIGHT - 16, ["#ff0000"], "#".repeat(player.health),
+       ["#333333"], "#".repeat(player.maxHealth - player.health));
 }
 
 async function main() {
@@ -260,6 +320,7 @@ async function main() {
     loadLevel("level.png"),
   ]);
   while (true) {
+    updateEnemies();
     updatePlayer();
     updateSolitaireSprites();
     drawWorld(player.x, player.y, player.angle);

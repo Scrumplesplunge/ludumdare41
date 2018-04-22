@@ -33,7 +33,7 @@ function onInput(input, state, handler) {
 function handleKeyCode(code, state) {
   if (!keyMap.has(event.code)) return;
   var input = keyMap.get(event.code);
-  if (edgeHandlers.has(input)) {
+  if (edgeHandlers.has(input) && inputs.get(input) != state) {
     for (var handler of edgeHandlers.get(input)[state]) handler();
   }
   if (input.substr(0, 7) == "TOGGLE:") {

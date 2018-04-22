@@ -1,5 +1,7 @@
 const CEILING_COLOR = "#7e756e";
 const DELTA_TIME = 0.02;
+const ENEMY_FOLLOW_RANGE = 3;
+const ENEMY_SPEED = 2;
 const FLOOR_COLOR = "#3a3633";
 const FOG_COLOR = "#000000";
 const FOG_DISTANCE = 5;
@@ -27,7 +29,7 @@ const Weapon = {
   fist: {
     range: 1,
     sweep: 1,
-    damage: 5,
+    damage: 1,
     image: () => weaponImages.get(inputs.get("ATTACK") ? "punch" : "fist"),
     hitSound: "punch",
   },
@@ -39,6 +41,8 @@ const context = canvas.getContext("2d");
 const items = [];
 const enemies = [];
 const player = {
+  health: 3,
+  maxHealth: 3,
   x: 0, y: 0, angle: 0,
   targetBlock: null,  // Target block for interactions.
   targetEnemy: null,  // Target enemy for attacks.
