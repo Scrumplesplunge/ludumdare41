@@ -208,7 +208,7 @@ function getStyledFont(style) {
 
 function rawMeasureText(message) { return 6 * message.length; }
 
-function rawText(x, y, style, message) {
+function rawText(context, x, y, style, message) {
   var message = message.toUpperCase();
   var font = getStyledFont(style);
   for (var i = 0, n = message.length; i < n; i++) {
@@ -231,13 +231,13 @@ function measureText(...parts) {
   return length;
 }
 
-function text(x, y, ...parts) {
+function text(context, x, y, ...parts) {
   var font = "#ffffff";
   for (var part of parts) {
     if (part instanceof Array) {
       font = part[0];
     } else {
-      x = rawText(x, y, font, part.toString());
+      x = rawText(context, x, y, font, part.toString());
     }
   }
   return x;

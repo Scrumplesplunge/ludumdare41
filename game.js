@@ -28,11 +28,7 @@ async function loadImages(images) {
 
 var loadWallImages = () => loadImages([
   "brick",
-  "clubs",
-  "diamonds",
   "end_brick",
-  "hearts",
-  "spades",
   "stack",
 ]);
 
@@ -43,23 +39,14 @@ var loadSpriteImages = () => loadImages([
   "star",
 ]);
 
-async function loadWallImages() {
-  return new Map(await Promise.all([
-    "brick",
-    "clubs",
-    "diamonds",
-    "end_brick",
-    "hearts",
-    "spades",
-  ].map(async (name) => [name, await loadImage(name + ".png")])));
-}
-
 async function loadLevel(name) {
-  let [levelImage, spriteImages, wallImages] = await Promise.all([
+  let [levelImage, spriteImages, suitSprites, wallImages] = await Promise.all([
     loadImage("level.png"),
     loadSpriteImages(),
+    loadSuitSprites(),
     loadWallImages(),
   ]);
+  for (var [suit, {canvas}] of suitSprites) wallImages.set(suit, canvas);
   var width = levelImage.width, height = levelImage.height;
   var imageData = getImageData(levelImage);
 
@@ -168,7 +155,7 @@ function updatePlayer() {
 function drawHelp() {
   var i = 0;
   for (var [input, key] of controlMap) {
-    text(2, 2 + 8 * i, input + " = ", ["#ffff00"], key);
+    text(context, 2, 2 + 8 * i, input + " = ", ["#ffff00"], key);
     i++;
   }
 }
@@ -177,7 +164,7 @@ function drawHud() {
   // Display elapsed time.
   var timeTaken = (Date.now() - startTime) / 1000;
   var minutes = (timeTaken / 60 | 0), seconds = timeTaken % 60 | 0;
-  text(2, 2, "Time: ", ["#ffff00"], minutes, ":",
+  text(context, 2, 2, "Time: ", ["#ffff00"], minutes, ":",
        seconds.toString().padStart(2, "0"));
   // Display the music indicator.
   var musicMessage = [
@@ -185,17 +172,18 @@ function drawHud() {
     [inputs.get("TOGGLE:MUSIC") ? "#00ff00" : "#ff0000"],
     inputs.get("TOGGLE:MUSIC") ? "On" : "Off",
   ];
-  text(WIDTH - 1 - measureText(...musicMessage), 2, ...musicMessage);
+  text(context, WIDTH - 1 - measureText(...musicMessage), 2, ...musicMessage);
   // Format the player's card list.
   var cardList = [];
-  if (player.cards.length == 0) {
+  if (solitaire.playerStack.length == 0) {
     cardList = [["#ffffff"], "[", ["#888888"], "?", ["#ffffff"], "]"];
   } else {
-    var [first, ...rest] = player.cards.map(card => [[cardColor(card)], card]);
+    var [first, ...rest] =
+        solitaire.playerStack.map(card => [[cardColor(card)], card]);
     cardList =
         [["#ffffff"], "[", ...first, ["#ffffff"], "]", ...[].concat(...rest)];
   }
-  text(2, HEIGHT - 8, ...cardList);
+  text(context, 2, HEIGHT - 8, ...cardList);
 }
 
 async function main() {
@@ -207,6 +195,7 @@ async function main() {
   while (true) {
     music.volume = inputs.get("TOGGLE:MUSIC") ? 0.2 : 0;
     updatePlayer();
+    updateSuitSprites();
     drawWorld(player.x, player.y, player.angle);
     inputs.get("HELP") ? drawHelp() : drawHud();
     await delay(DELTA_TIME);
