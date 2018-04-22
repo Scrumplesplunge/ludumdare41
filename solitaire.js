@@ -84,6 +84,12 @@ function playerPut(place) {
   var card = solitaire.playerStack.pop();
   if (Suit.hasOwnProperty(place)) {
     solitaire[place] = cardValue(card);
+    if (solitaire.clubs == 13 &&
+        solitaire.diamonds == 13 &&
+        solitaire.hearts == 13 &&
+        solitaire.spades == 13) {
+      solitaire.win = true;
+    }
   } else {
     var stack = solitaire.stacks[parseInt(place.substr(5), 10)];
     stack.push(card);

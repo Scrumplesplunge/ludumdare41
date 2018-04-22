@@ -302,7 +302,7 @@ function drawHud() {
     cardList = [["#ffffff"], "[", ["#888888"], "?", ["#ffffff"], "]"];
   } else {
     var [first, ...rest] =
-        solitaire.playerStack.map(card => [[cardColor(card)], card]);
+        solitaire.playerStack.map(card => [[cardColor(card)], card]).reverse();
     cardList =
         [["#ffffff"], "[", ...first, ["#ffffff"], "]", ...[].concat(...rest)];
   }
@@ -338,7 +338,7 @@ async function main() {
     loadWeaponImages(),
     loadLevel("level.png"),
   ]);
-  while (true) {
+  while (!solitaire.win) {
     updateEnemies();
     updatePlayer();
     updateSolitaireSprites();
@@ -346,6 +346,17 @@ async function main() {
     inputs.get("HELP") ? drawHelp() : drawHud();
     await delay(DELTA_TIME);
   }
+  music.pause();
+  music = playSound("win");
+  context.globalAlpha = 0.8;
+  context.fillStyle = "#000000";
+  context.fillRect(0, 0, WIDTH, HEIGHT);
+  context.globalAlpha = 1;
+  var message = "Thanks for playing :)";
+  text(context, 0.5 * (WIDTH - 6 * message.length) | 0, HEIGHT / 2 + 10 | 0,
+       message);
+  context.scale(3, 3);
+  text(context, 8, 15, "You Win!");
 }
 
 main();
