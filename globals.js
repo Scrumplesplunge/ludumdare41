@@ -20,7 +20,8 @@ const SPADES = "&";
 const startTime = Date.now();
 const canvas = document.getElementById("display");
 const context = canvas.getContext("2d");
-const objects = [];
+const items = [];
+const enemies = [];
 const player = {x: 0, y: 0, angle: 0};
 const solitaire = {
   blocks: new Map,

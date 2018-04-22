@@ -152,7 +152,22 @@ function drawObjects(x, y, angle) {
     return PLAYER_RADIUS < d && d < FOG_DISTANCE;
   }
   context.globalAlpha = 1;
-  var sprites = objects.filter(inViewingRange);
+  // Remove any items or enemies that are marked to be removed.
+  for (var i = 0, j = 0, n = items.length; i < n; i++)
+    if (!items[i].removed) items[j++] = items[i];
+  items.splice(j);
+  for (var i = 0, j = 0, n = enemies.length; i < n; i++)
+    if (!enemies[i].removed) enemies[j++] = enemies[i];
+  enemies.splice(j);
+  var itemSprites = items.map(({image, x, y, phaseOffset}) => {
+    var phase = (0.01 * Date.now() + phaseOffset) % (2 * Math.PI);
+    var verticalOffset = 0.01 * Math.sin(phase);
+    return {image, x, y, width: 0.25, height: 0.25, verticalOffset};
+  });
+  var enemySprites = enemies.map(({image, x, y}) => {
+    return {image, x, y, width: 0.25, height: 0.4, verticalOffset: 0.1};
+  });
+  var sprites = [...itemSprites, ...enemySprites].filter(inViewingRange);
   sprites.sort((a, b) => distance(b) - distance(a));
   for (var sprite of sprites) {
     // Compute the on-screen dimensions of the sprite.

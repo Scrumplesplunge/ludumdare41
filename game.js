@@ -48,44 +48,29 @@ async function loadLevel(name) {
     ["player", (x, y) => { player.x = x; player.y = y; }],
   ]);
 
-  function makeAttack(x, y) {
-    return {
-      image: spriteImages.get("attack"),
-      width: 0.25, height: 0.25, x, y,
+  function makeEnemy(x, y) { return {image: spriteImages.get("enemy"), x, y}; }
+  function collect(item) { item.removed = true; }
+  function item(x, y, type, onCollect) {
+    var item = {
+      image: spriteImages.get(type),
+      phaseOffset: 2 * Math.PI * Math.random(),
+      x, y,
+      onCollect: () => collect(item),
+      removed: false,
     };
-  }
-
-  function makeEnemy(x, y) {
-    return {
-      image: spriteImages.get("enemy"),
-      width: 0.25, height: 0.4, x, y,
-      verticalOffset: 0.1,
-    };
-  }
-
-  function makeHealth(x, y) {
-    return {
-      image: spriteImages.get("health"),
-      width: 0.25, height: 0.25, x, y,
-    };
-  }
-
-  function makeStar(x, y) {
-    return {
-      image: spriteImages.get("star"),
-      width: 0.25, height: 0.25, x, y,
-    };
+    return item;
   }
 
   var instancers = new Map([
-    ["attack", (x, y) => objects.push(makeAttack(x, y))],
-    ["enemy", (x, y) => objects.push(makeEnemy(x, y))],
-    ["health", (x, y) => objects.push(makeHealth(x, y))],
-    ["star", (x, y) => objects.push(makeStar(x, y))],
+    ["attack", (x, y) => items.push(item(x, y, "attack"))],
+    ["enemy", (x, y) => enemies.push(makeEnemy(x, y))],
+    ["health", (x, y) => items.push(item(x, y, "health"))],
+    ["star", (x, y) => items.push(item(x, y, "star"))],
   ]);
 
   walls.clear();
-  objects.splice(0, objects.length);
+  items.splice(0, items.length);
+  enemies.splice(0, enemies.length);
   var objectIds = new Set;
   for (var y = 0; y < height; y++) {
     for (var x = 0; x < width; x++) {
