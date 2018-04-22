@@ -75,11 +75,17 @@ async function loadLevel(name) {
       case "health":
         if (player.health != player.maxHealth) {
           player.health = player.maxHealth;
-          playSound("collect");
-          item.removed = true;
         }
         break;
+      case "star":
+        player.health++;
+        player.maxHealth++;
+        break;
+      default:
+        return;
     }
+    playSound("collect");
+    item.removed = true;
   }
   function item(x, y, type, onCollect) {
     var item = {
