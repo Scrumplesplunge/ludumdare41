@@ -11,13 +11,20 @@ async function loadFont() {
 async function loadMusic() {
   // This list includes sounds which will be used later so that they don't need
   // to be fetched when they are first played.
-  var [m, g, p] =
-      await Promise.all(["music.ogg", "get.ogg", "put.ogg"].map(loadSound));
+  var [m, ...preloaded] = await Promise.all([
+      "music.ogg", "get.ogg", "put.ogg", "collect.ogg"].map(loadSound));
   music = m;
   music.loop = true;
   music.volume = 0.2;
   music.play();
   onInput("MUSIC", 1, () => music.paused ? music.play() : music.pause());
+}
+
+async function loadWeaponImages() {
+  weaponImages = await loadImages([
+    "fist",
+    "punch",
+  ]);
 }
 
 var loadWallImages = () => loadImages([
@@ -48,7 +55,10 @@ async function loadLevel(name) {
   ]);
 
   function makeEnemy(x, y) { return {image: spriteImages.get("enemy"), x, y}; }
-  function collect(item) { item.removed = true; }
+  function collect(item) {
+    playSound("collect");
+    item.removed = true;
+  }
   function item(x, y, type, onCollect) {
     var item = {
       image: spriteImages.get(type),
@@ -127,6 +137,10 @@ async function loadLevel(name) {
       action.perform();
     }
   });
+
+  onInput("ATTACK", 1, () => {
+    if (player.targetEnemy) playSound(player.weapon.hitSound);
+  });
 }
 
 function updatePlayer() {
@@ -153,9 +167,32 @@ function updatePlayer() {
   } else if (dy > 0 && walls.has(cellX + "," + (cellY + 1))) {
     player.y = Math.min(player.y, cellY + 1 - PLAYER_RADIUS);
   }
-  // Set the player's target block if they are close enough to one.
+  // Set the target block if close enough to one.
   var {distance, block} = cast(player.x, player.y, player.angle);
   player.targetBlock = distance < INTERACT_DISTANCE ? block : null;
+  // Set the target enemy if one is in range.
+  function enemyDistance(enemy) {
+    var dx = enemy.x - player.x, dy = enemy.y - player.y;
+    var forwardDistance = c * dx + s * dy;
+    var sideDistance = Math.abs(-s * dx + c * dy);
+    if (sideDistance > player.weapon.sweep) return Infinity;
+    if (forwardDistance < 0) return Infinity;
+    return forwardDistance;
+  }
+  var potentialTargets =
+      enemies.map(e => [enemyDistance(e), e])
+             .filter(([d, e]) => d < player.weapon.range)
+             .sort(([d1, e1], [d2, e2]) => d1 - d2)
+             .map(([d, e]) => e);
+  player.targetEnemy = potentialTargets.length > 0 ? potentialTargets[0] : null;
+  // Collect any items near the player.
+  for (var i = 0, n = items.length; i < n; i++) {
+    var dx = items[i].x - player.x, dy = items[i].y - player.y;
+    var distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance < ITEM_COLLECT_DISTANCE) {
+      items[i].onCollect();
+    }
+  }
 }
 
 function drawHelp() {
@@ -209,12 +246,17 @@ function drawHud() {
                              controlMap.get("SECONDARY_INTERACT"), HEIGHT - 16);
     }
   }
+  // Show the player weapon.
+  var image = player.weapon.image();
+  var w = WEAPON_SCALE * image.width, h = WEAPON_SCALE * image.height;
+  context.drawImage(image, WIDTH - w, HEIGHT - h, w, h);
 }
 
 async function main() {
   await Promise.all([
     loadFont(),
     loadMusic(),
+    loadWeaponImages(),
     loadLevel("level.png"),
   ]);
   while (true) {

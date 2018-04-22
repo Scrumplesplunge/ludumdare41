@@ -6,11 +6,13 @@ const FOG_DISTANCE = 5;
 const FOV = 90 * Math.PI / 180;
 const HEIGHT = 108;
 const INTERACT_DISTANCE = 1;
+const ITEM_COLLECT_DISTANCE = 0.5;
 const MOVE_SPEED = 3;
 const PLAYER_RADIUS = 0.25;
 const SCALE = 5;
 const TURN_SPEED = 5;
 const WALL_HEIGHT = 0.5;
+const WEAPON_SCALE = 4;
 const WIDTH = 192;
 
 const Suit = {
@@ -18,6 +20,17 @@ const Suit = {
   diamonds: "$",
   hearts: "#",
   spades: "&",
+};
+
+let weaponImages;
+const Weapon = {
+  fist: {
+    range: 1,
+    sweep: 1,
+    damage: 5,
+    image: () => weaponImages.get(inputs.get("ATTACK") ? "punch" : "fist"),
+    hitSound: "punch",
+  },
 };
 
 const startTime = Date.now();
@@ -28,6 +41,8 @@ const enemies = [];
 const player = {
   x: 0, y: 0, angle: 0,
   targetBlock: null,  // Target block for interactions.
+  targetEnemy: null,  // Target enemy for attacks.
+  weapon: Weapon.fist,
 };
 const solitaire = {
   blocks: new Map,
@@ -59,7 +74,7 @@ const controlMap = new Map([
   ["STRAFE_RIGHT", "KeyD"],
   ["PRIMARY_INTERACT", "KeyR"],
   ["SECONDARY_INTERACT", "KeyF"],
-  ["FIRE", "Space"],
+  ["ATTACK", "Space"],
   ["MUSIC", "KeyM"],
   ["HELP", "KeyH"],
 ]);
