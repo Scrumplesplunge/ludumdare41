@@ -50,3 +50,4 @@ lists code changes that have happened since the competition ended.
   * Hitting enemies (with any weapon) now has knockback.
   * Enemies now bob up and down when moving.
   * Changed HUD to show what type of card the player can pick up next.
+  * Made a sound play when dropping a card.

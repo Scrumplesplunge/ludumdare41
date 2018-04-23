@@ -235,6 +235,7 @@ async function loadLevel(name) {
 
   onInput("DROP", 1, () => {
     if (solitaire.playerStack.length == 0) return;
+    playSound("put");
     // Cast a ray to check that the card won't be dropped in a wall.
     var {distance} = cast(player.x, player.y, player.angle);
     var dropDistance =
