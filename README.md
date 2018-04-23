@@ -42,10 +42,19 @@ lists code changes that have happened since the competition ended.
 
 ### Bug Fixes
 
+Bug fixes are allowed under the [competition
+rules](https://ldjam.com/events/ludum-dare/rules). These changes affect both the
+competition version and the latest version which are linked at the top of the
+README.
+
   * Removed dependence on `window.event` and added a compatibility workaround
     to make the game work in Firefox.
 
 ### Feature Changes
+
+Feature changes are not allowed after the competition deadline. These changes
+are *only* reflected in the *latest version*. If you are judging the
+competition, please decide scores based on the *competition version*.
 
   * Hitting enemies (with any weapon) now has knockback.
   * Enemies now bob up and down when moving.
