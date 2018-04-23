@@ -367,16 +367,28 @@ function drawHud() {
   ];
   text(context, WIDTH - 1 - measureText(...musicMessage), 2, ...musicMessage);
   // Format the player's card list.
-  var cardList = [];
-  if (solitaire.playerStack.length == 0) {
-    cardList = [["#ffffff"], "[", ["#888888"], "?", ["#ffffff"], "]"];
+  var nextCardIndicator = [];
+  var stack = solitaire.playerStack;
+  if (stack.length == 0) {
+    // The player can pick up any card next.
+    nextCardIndicator = [["#ffff00"], "??"];
   } else {
-    var [first, ...rest] =
-        solitaire.playerStack.map(card => [[cardColor(card)], card]).reverse();
-    cardList =
-        [["#ffffff"], "[", ...first, ["#ffffff"], "]", ...[].concat(...rest)];
+    var card = stack[stack.length - 1];
+    var value = cardValue(card);
+    if (value == 13) {
+      // The player cannot pick up another card.
+      nextCardIndicator = [["#888888"], "--"];
+    } else {
+      var color = cardColor(card);
+      var nextColor = color == "#000000" ? "#ff0000" : "#000000";
+      nextCardIndicator =
+          [["#ffff00"], "A23456789\"JQK"[value], [nextColor], "?"];
+    }
   }
-  text(context, 2, HEIGHT - 8, ...cardList);
+  var end = text(context, 2, HEIGHT - 8, ["#ffffff"], "[", ...nextCardIndicator,
+                 ["#ffffff"], "]");
+  var cardInfo = stack.map(card => [[cardColor(card)], card]).reverse();
+  text(context, end, HEIGHT - 8, ...[].concat(...cardInfo));
   // Show interaction options for the target block.
   if (player.targetBlock) {
     var block = player.targetBlock;
