@@ -30,7 +30,7 @@ function onInput(input, state, handler) {
 }
 
 // Set or unset inputs when keys are pressed.
-function handleKeyCode(code, state) {
+function handleKeyCode(event, state) {
   if (!keyMap.has(event.code)) return;
   var input = keyMap.get(event.code);
   if (edgeHandlers.has(input) && inputs.get(input) != state) {
@@ -43,5 +43,5 @@ function handleKeyCode(code, state) {
     inputs.set(input, state);
   }
 }
-window.addEventListener("keydown", event => handleKeyCode(event.code, 1));
-window.addEventListener("keyup", event => handleKeyCode(event.code, 0));
+window.addEventListener("keydown", event => handleKeyCode(event, 1));
+window.addEventListener("keyup", event => handleKeyCode(event, 0));
