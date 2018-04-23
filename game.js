@@ -4,6 +4,11 @@ canvas.style.width = SCALE * WIDTH + "px";
 canvas.style.height = SCALE * HEIGHT + "px";
 context.imageSmoothingEnabled = false;
 
+// Firefox support for image-rendering: pixelated is not available yet, but
+// optimizeSpeed works.
+if (!canvas.style.imageRendering)
+  canvas.style.imageRendering = "optimizeSpeed";
+
 async function loadFont() {
   fontImage = await loadImage("font.png");
 }
