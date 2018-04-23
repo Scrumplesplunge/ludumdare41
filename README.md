@@ -60,3 +60,4 @@ competition, please decide scores based on the *competition version*.
   * Enemies now bob up and down when moving.
   * Changed HUD to show what type of card the player can pick up next.
   * Made a sound play when dropping a card.
+  * Added mouse support.

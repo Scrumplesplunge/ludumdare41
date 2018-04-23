@@ -2,11 +2,6 @@ const edgeX = Math.tan(0.5 * FOV);
 const yMid = Math.round(0.5 * HEIGHT);
 const wallDistances = [];
 
-function angNorm(angle) {
-  var pi = Math.PI, tau = 2 * Math.PI;
-  return ((angle + pi) % tau + tau) % tau - pi;
-}
-
 function columnToScreenAngle(column) {
   return Math.atan(edgeX * (2 * column / WIDTH - 1));
 }

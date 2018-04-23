@@ -51,3 +51,8 @@ function colorAt(array, index) {
   var r = array[index], g = array[index + 1], b = array[index + 2];
   return "#" + [r, g, b].map(hexByte).join("");
 }
+
+function angNorm(angle) {
+  var pi = Math.PI, tau = 2 * Math.PI;
+  return ((angle + pi) % tau + tau) % tau - pi;
+}

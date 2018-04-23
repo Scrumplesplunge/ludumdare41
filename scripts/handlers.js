@@ -29,10 +29,7 @@ function onInput(input, state, handler) {
   handlers[state].push(handler);
 }
 
-// Set or unset inputs when keys are pressed.
-function handleKeyCode(event, state) {
-  if (!keyMap.has(event.code)) return;
-  var input = keyMap.get(event.code);
+function handleInput(input, state) {
   if (edgeHandlers.has(input) && inputs.get(input) != state) {
     for (var handler of edgeHandlers.get(input)[state]) handler();
   }
@@ -43,5 +40,27 @@ function handleKeyCode(event, state) {
     inputs.set(input, state);
   }
 }
+
+// Set or unset inputs when keys are pressed.
+function handleKeyCode(event, state) {
+  if (!keyMap.has(event.code)) return;
+  handleInput(keyMap.get(event.code), state);
+}
+
 window.addEventListener("keydown", event => handleKeyCode(event, 1));
 window.addEventListener("keyup", event => handleKeyCode(event, 0));
+window.addEventListener("mousedown", event => {
+  if (!document.pointerLockElement) {
+    canvas.requestPointerLock();
+  } else {
+    handleInput("ATTACK", 1);
+  }
+});
+window.addEventListener("mouseup", event => {
+  if (!document.pointerLockElement) return;
+  handleInput("ATTACK", 0);
+});
+window.addEventListener("mousemove", event => {
+  if (!document.pointerLockElement) return;
+  player.angle = angNorm(player.angle + event.movementX * MOUSE_SENSITIVITY);
+})
