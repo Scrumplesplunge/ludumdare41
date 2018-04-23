@@ -132,6 +132,8 @@ async function loadLevel(name) {
     var enemy = {
       image: spriteImages.get("enemy"),
       x, y,
+      phaseOffset: 2 * Math.PI * Math.random(),
+      moving: false,
       health: 2,
       nextAttack: 0,
       attackCooldown: 1000,
@@ -322,9 +324,11 @@ function updateEnemies() {
     var playerDistance = Math.sqrt(dx * dx + dy * dy);
     // Only move towards the player if the player is close enough and there is a
     // clear line of sight.
+    enemy.moving = false;
     if (playerDistance > ENEMY_FOLLOW_RANGE) continue;
     if (playerDistance > 0.8) {
       // Chase the player.
+      enemy.moving = true;
       var {distance, hit} = cast(enemy.x, enemy.y, Math.atan2(dy, dx));
       if (distance < playerDistance) continue;
       enemy.x += ENEMY_SPEED * DELTA_TIME * dx / distance;

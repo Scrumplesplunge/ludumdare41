@@ -44,3 +44,8 @@ lists code changes that have happened since the competition ended.
 
   * Removed dependence on `window.event` and added a compatibility workaround
     to make the game work in Firefox.
+
+### Feature Changes
+
+  * Hitting enemies (with any weapon) now has knockback.
+  * Enemies now bob up and down when moving.

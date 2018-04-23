@@ -165,8 +165,13 @@ function drawObjects(x, y, angle) {
     var verticalOffset = 0.01 * Math.sin(phase);
     return {image, x, y, width: 0.25, height: 0.25, verticalOffset};
   });
-  var enemySprites = enemies.map(({image, x, y}) => {
-    return {image, x, y, width: 0.25, height: 0.4, verticalOffset: 0.1};
+  var enemySprites = enemies.map(({image, x, y, moving, phaseOffset}) => {
+    var verticalOffset = 0.1;
+    if (moving) {
+      var phase = (0.01 * Date.now() + phaseOffset) % (2 * Math.PI);
+      verticalOffset -= Math.abs(0.03 * Math.sin(phase));
+    }
+    return {image, x, y, width: 0.25, height: 0.4, verticalOffset};
   });
   var sprites = [...itemSprites, ...enemySprites].filter(inViewingRange);
   sprites.sort((a, b) => distance(b) - distance(a));
