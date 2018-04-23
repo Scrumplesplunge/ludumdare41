@@ -214,9 +214,20 @@ async function loadLevel(name) {
   onInput("ATTACK", 1, () => {
     var weapon = weapons[player.weapon];
     if (weapon.attackSound) playSound(weapon.attackSound);
-    if (player.targetEnemy) {
+    var enemy = player.targetEnemy;
+    if (enemy) {
       playSound(weapon.hitSound);
-      player.targetEnemy.health -= weapon.damage;
+      enemy.health -= weapon.damage;
+      // Knock back the enemy slightly, taking care not to put them inside
+      // a wall.
+      var dx = enemy.x - player.x, dy = enemy.y - player.y;
+      var currentDistance = Math.sqrt(dx * dx + dy * dy);
+      var {distance} = cast(player.x, player.y, player.angle);
+      var knockbackDistance = Math.min(currentDistance + KNOCKBACK_DISTANCE,
+                                       distance - PLAYER_RADIUS);
+      var distanceRatio = knockbackDistance / currentDistance;
+      enemy.x = player.x + dx * distanceRatio;
+      enemy.y = player.y + dy * distanceRatio;
     }
   });
 
