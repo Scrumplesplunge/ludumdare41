@@ -4,7 +4,7 @@ function loadImage(name) {
     var image = new Image;
     image.onload = () => resolve(image);
     image.onerror = reject;
-    image.src = name;
+    image.src = "images/" + name;
   });
 }
 
@@ -21,12 +21,14 @@ function loadSound(name) {
     var sound = new Audio;
     sound.addEventListener("canplaythrough", () => resolve(sound));
     sound.onerror = reject;
-    sound.src = name;
+    sound.src = "sounds/" + name;
   });
 }
 
 // Play a sound.
-function playSound(name) { return (new Audio(name + ".ogg")).play(); }
+function playSound(name) {
+  return (new Audio("sounds/" + name + ".ogg")).play();
+}
 
 // Extract image data from an image.
 function getImageData(image) {
