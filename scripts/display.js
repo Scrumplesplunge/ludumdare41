@@ -10,14 +10,14 @@ function screenAngleToColumn(angle) {
   return (Math.tan(angle) / edgeX + 1) * WIDTH / 2;
 }
 
-function* walkRay(x, y, angle) {
+function* walkRay(x, y, angle, range) {
   var directionX = Math.cos(angle);
   var directionY = Math.sin(angle);
   var distance = 0;
   var iterCount = 0;
   var cellX = directionX >= 0 ? Math.floor(x) : Math.ceil(x - 1);
   var cellY = directionY >= 0 ? Math.floor(y) : Math.ceil(y - 1);
-  while (distance < FOG_DISTANCE) {
+  while (distance < range) {
     if (++iterCount == 200) throw new Error("balls");
     // next?Edge is the next point along coordinate ? where the ray could hit.
     // The coordinates are independent, this isn't the actual cell yet.
@@ -50,13 +50,14 @@ function* walkRay(x, y, angle) {
   }
 }
 
-function cast(x, y, angle) {
-  for (var {distance, cell, hit} of walkRay(x, y, angle)) {
+function cast(x, y, angle, range) {
+  if (range === undefined) range = FOG_DISTANCE;
+  for (var {distance, cell, hit} of walkRay(x, y, angle, range)) {
     var id = cell.x + "," + cell.y;
     if (walls.has(id))
       return {distance, block: walls.get(id), cell, hit};
   }
-  return {distance: FOG_DISTANCE};
+  return {distance: range};
 }
 
 function computeTextureColumn(cell, hit) {

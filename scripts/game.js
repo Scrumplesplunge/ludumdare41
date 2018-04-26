@@ -257,10 +257,15 @@ function updatePlayer() {
     player.weapon = 0;
   }
   // Move the player based on inputs.
-  var forwardMove = inputs.get("FORWARDS") - inputs.get("BACKWARDS");
-  var sideMove = inputs.get("STRAFE_RIGHT") - inputs.get("STRAFE_LEFT");
   var turn = inputs.get("TURN_RIGHT") - inputs.get("TURN_LEFT");
   player.angle += TURN_SPEED * turn * DELTA_TIME;
+  var forwardMove = inputs.get("FORWARDS") - inputs.get("BACKWARDS");
+  var sideMove = inputs.get("STRAFE_RIGHT") - inputs.get("STRAFE_LEFT");
+  var moveLength = Math.sqrt(forwardMove * forwardMove + sideMove * sideMove);
+  if (moveLength > 0) {
+    forwardMove /= moveLength;
+    sideMove /= moveLength;
+  }
   var c = Math.cos(player.angle), s = Math.sin(player.angle);
   var dx = (c * forwardMove - s * sideMove) * MOVE_SPEED * DELTA_TIME;
   var dy = (s * forwardMove + c * sideMove) * MOVE_SPEED * DELTA_TIME;
@@ -327,13 +332,14 @@ function updateEnemies() {
     // clear line of sight.
     enemy.moving = false;
     if (playerDistance > ENEMY_FOLLOW_RANGE) continue;
-    if (playerDistance > 0.8) {
+    if (playerDistance > ENEMY_ATTACK_DISTANCE) {
       // Chase the player.
-      enemy.moving = true;
-      var {distance, hit} = cast(enemy.x, enemy.y, Math.atan2(dy, dx));
+      var {distance, hit} =
+          cast(enemy.x, enemy.y, Math.atan2(dy, dx), ENEMY_FOLLOW_RANGE);
       if (distance < playerDistance) continue;
-      enemy.x += ENEMY_SPEED * DELTA_TIME * dx / distance;
-      enemy.y += ENEMY_SPEED * DELTA_TIME * dy / distance;
+      enemy.moving = true;
+      enemy.x += ENEMY_SPEED * DELTA_TIME * dx / playerDistance;
+      enemy.y += ENEMY_SPEED * DELTA_TIME * dy / playerDistance;
     } else if (now > enemy.nextAttack) {
       playSound("enemy_attack");
       player.health--;

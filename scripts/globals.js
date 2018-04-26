@@ -1,7 +1,8 @@
 const CEILING_COLOR = "#7e756e";
 const DELTA_TIME = 0.02;
-const ENEMY_FOLLOW_RANGE = 3;
-const ENEMY_SPEED = 2;
+const ENEMY_ATTACK_DISTANCE = 0.8;
+const ENEMY_FOLLOW_RANGE = 8;
+const ENEMY_SPEED = 1.5;
 const FLOOR_COLOR = "#3a3633";
 const FOG_COLOR = "#000000";
 const FOG_DISTANCE = 5;
@@ -37,15 +38,15 @@ const Weapon = {
     hitSound: "punch",
   },
   dagger: {
-    range: 0.5,
+    range: 1,
     sweep: 0.5,
     damage: 2,
     image: () => weaponImages.get(inputs.get("ATTACK") ? "stab" : "dagger"),
     hitSound: "punch",
   },
   pistol: {
-    range: FOG_DISTANCE,
-    sweep: 0.25,
+    range: 2 * FOG_DISTANCE,
+    sweep: 0.1,
     damage: 1,
     image: () => weaponImages.get(
         inputs.get("ATTACK") ? "pistol_fired" : "pistol"),
